@@ -4,5 +4,7 @@ openpyxl
 transformers
 huggingface-hub
 torch
+openai
+python-dotenv
 
 # test
