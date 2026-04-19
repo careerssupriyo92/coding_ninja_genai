@@ -1,0 +1,12 @@
+2026-04-19 12:28:14,657 | INFO | Processing email 47: 'Can't login...'
+2026-04-19 12:28:14,664 | INFO | Cache hit — no API call
+2026-04-19 12:28:14,665 | INFO | Classified: Billing | High urgency
+2026-04-19 12:28:14,667 | INFO | Routed to: billing@company.com
+2026-04-19 12:28:14,668 | WARNING | Email rejected: Injection detected
+2026-04-19 12:28:14,669 | ERROR | API error on attempt 3: RateLimitError
+2026-04-19 12:28:27,589 | INFO | Processing email 47: 'Can't login...'
+2026-04-19 12:28:27,592 | INFO | Cache hit — no API call
+2026-04-19 12:28:27,593 | INFO | Classified: Billing | High urgency
+2026-04-19 12:28:27,595 | INFO | Routed to: billing@company.com
+2026-04-19 12:28:27,598 | WARNING | Email rejected: Injection detected
+2026-04-19 12:28:27,605 | ERROR | API error on attempt 3: RateLimitError

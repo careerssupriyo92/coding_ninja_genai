@@ -2,18 +2,35 @@ import json
 from dotenv import load_dotenv
 from openai import OpenAI
 import os
+import time
 load_dotenv()
 
 
 client = OpenAI()
 
-def call_llm(prompt):
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0
-        )
-        return response.choices[0].message.content.strip()
+
+def call_llm(prompt, retries=3):
+    for attempt in range(retries):
+        try:
+            response = client.chat.completions.create(
+                 model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+               
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            error = str(e)
+
+            # Auth error — retrying won't help, fix key first
+            if "401" in error or "authentication" in error.lower():
+                print("❌ Auth error — check your API key in .env")
+                return "AUTH_ERROR"
+
+            # Rate limit or server error — wait and retry
+            wait = 2 ** attempt   # 1s → 2s → 4s
+            print(f"⚠️  Attempt {attempt+1}/{retries} failed."
+                  f" Waiting {wait}s... ({error[:50]})")
+            time.sleep(wait)
 
 
 
