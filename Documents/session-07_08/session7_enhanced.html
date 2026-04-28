@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session 7 — Conversational Interfaces with LLMs</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@500;600;700&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0a0a0f;--paper:#f7f6f0;--warm:#f0ede2;--surface:#e4e0d4;
+  --green:#1a7a4a;--green-light:#e8f5ee;--green-border:#a8d9bc;
+  --blue:#1a4fa0;--blue-light:#e8eef9;--blue-border:#a0bce8;
+  --red:#c42b2b;--red-light:#fdf0f0;--red-border:#f0b8b8;
+  --amber:#b86a00;--amber-light:#fff8e8;--amber-border:#f0d090;
+  --purple:#6020b0;--purple-light:#f5f0ff;--purple-border:#c8a0f0;
+  --muted:#6b6560;--border:#d8d4c8;
+  --code-bg:#0d1117;--cg:#58a862;--cy:#e5c07b;--cr:#e06c75;--cb:#61afef;--cm:#c678dd;--cc:#5c6370;--co:#d19a66;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.8;overflow-x:hidden}
+
+.prog-bar{position:fixed;top:0;left:0;right:0;height:3px;background:var(--border);z-index:1000}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));width:0%;transition:width .4s ease}
+
+.topnav{position:fixed;top:3px;left:0;right:0;height:54px;background:rgba(247,246,240,.95);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;z-index:999;backdrop-filter:blur(10px);overflow-x:auto;gap:2px}
+.nav-session{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-right:12px;white-space:nowrap;flex-shrink:0;background:var(--green-light);padding:3px 8px;border-radius:4px;border:1px solid var(--green-border)}
+.nav-ch{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);padding:5px 10px;border-radius:5px;cursor:pointer;background:none;border:none;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.nav-ch:hover{background:var(--warm);color:var(--ink)}
+.nav-ch.active{background:var(--ink);color:white}
+.nav-right{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0}
+
+.main{padding-top:57px}
+.chapter{display:none;max-width:820px;margin:0 auto;padding:56px 28px 100px}
+.chapter.active{display:block}
+
+.ch-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px}
+.ch-title{font-family:'Clash Display',sans-serif;font-size:42px;font-weight:700;line-height:1.05;margin-bottom:18px;letter-spacing:-0.5px}
+.ch-title .hl-green{color:var(--green)}
+.ch-title .hl-blue{color:var(--blue)}
+.ch-title .hl-red{color:var(--red)}
+.ch-title .hl-amber{color:var(--amber)}
+.ch-title .hl-purple{color:var(--purple)}
+.ch-sub{font-size:17px;color:var(--muted);max-width:580px;line-height:1.7;font-style:italic;margin-bottom:36px}
+
+.recall{background:var(--amber-light);border:2px solid var(--amber-border);border-radius:12px;padding:22px 26px;margin:0 0 36px;position:relative}
+.recall::before{content:'← Session 6 Recall';position:absolute;top:-13px;left:14px;background:var(--paper);padding:0 8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;font-weight:700}
+
+h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin:44px 0 18px;line-height:1.2}
+h3{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;margin:32px 0 12px}
+h4{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin:22px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+p{margin-bottom:16px;color:var(--ink)}
+
+.story-box{background:#fffbef;border:1px solid #e8c96a;border-radius:10px;padding:22px 26px;margin:28px 0;position:relative}
+.story-box::before{content:'📖';position:absolute;top:-14px;left:18px;background:var(--paper);padding:0 6px;font-size:18px}
+.story-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+
+.pain-box{background:var(--red-light);border:1px solid var(--red-border);border-radius:10px;padding:22px 26px;margin:28px 0;position:relative}
+.pain-box::before{content:'🔥';position:absolute;top:-14px;left:18px;background:var(--paper);padding:0 6px;font-size:18px}
+.pain-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+
+.win-box{background:var(--green-light);border:1px solid var(--green-border);border-radius:10px;padding:22px 26px;margin:28px 0;position:relative}
+.win-box::before{content:'✅';position:absolute;top:-14px;left:18px;background:var(--paper);padding:0 6px;font-size:18px}
+.win-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+
+.think-box{background:var(--purple-light);border:1px solid var(--purple-border);border-radius:10px;padding:22px 26px;margin:28px 0;position:relative}
+.think-box::before{content:'💡';position:absolute;top:-14px;left:18px;background:var(--paper);padding:0 6px;font-size:18px}
+.think-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+
+.warning-box{background:var(--amber-light);border:1px solid var(--amber-border);border-radius:10px;padding:22px 26px;margin:28px 0;position:relative}
+.warning-box::before{content:'⚠️';position:absolute;top:-14px;left:18px;background:var(--paper);padding:0 6px;font-size:18px}
+.warning-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+
+.code-block{background:var(--code-bg);border-radius:10px;margin:22px 0;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.14)}
+.code-header{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.07);gap:8px}
+.code-dots{display:flex;gap:5px}
+.code-dot{width:10px;height:10px;border-radius:50%}
+.dr{background:#ff5f57}.dy{background:#febc2e}.dg{background:#28c840}
+.code-filename{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.4);margin-left:4px}
+.code-tag{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px}
+.tag-pain{background:rgba(224,108,117,.2);color:#e06c75}
+.tag-win{background:rgba(88,168,98,.2);color:#58a862}
+.tag-note{background:rgba(97,175,239,.2);color:#61afef}
+.code-body{padding:18px 20px;overflow-x:auto}
+.code-body pre{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.75;color:#abb2bf;white-space:pre}
+
+/* chat demo */
+.chat-demo{background:var(--warm);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin:22px 0}
+.chat-top{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.chat-inner{padding:18px;display:flex;flex-direction:column;gap:12px}
+.cmsg{display:flex;gap:10px;align-items:flex-start}
+.cmsg.user{flex-direction:row-reverse}
+.cavatar{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;flex-shrink:0}
+.cmsg.bot .cavatar{background:var(--green-light);color:var(--green);border:1px solid var(--green-border)}
+.cmsg.user .cavatar{background:var(--ink);color:white}
+.cbubble{background:white;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;color:var(--ink);max-width:76%;line-height:1.6;font-family:'Lora',serif}
+.cmsg.user .cbubble{background:var(--ink);color:white;border-color:var(--ink)}
+.cerror{background:var(--red-light);border:1px solid var(--red-border);border-radius:8px;padding:10px 14px;font-size:13.5px;color:#7a1010;max-width:76%;line-height:1.6;font-family:'Lora',serif}
+.clabel{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);text-align:center;letter-spacing:2px;text-transform:uppercase;margin:4px 0}
+
+/* roles grid */
+.roles-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:22px 0}
+.role-card{border-radius:10px;padding:20px;border:1px solid var(--border)}
+.role-card.sys{background:var(--amber-light);border-color:var(--amber-border)}
+.role-card.usr{background:var(--blue-light);border-color:var(--blue-border)}
+.role-card.ast{background:var(--green-light);border-color:var(--green-border)}
+.role-badge{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:10px;font-weight:600}
+.role-card.sys .role-badge{background:rgba(184,106,0,.12);color:var(--amber)}
+.role-card.usr .role-badge{background:rgba(26,79,160,.12);color:var(--blue)}
+.role-card.ast .role-badge{background:rgba(26,122,74,.12);color:var(--green)}
+.role-card h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin:0 0 8px}
+.role-card p{font-size:13.5px;color:var(--muted);margin-bottom:10px;line-height:1.6}
+.role-eg{background:white;border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink);font-style:italic;line-height:1.6}
+
+/* compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.cmp{border-radius:8px;padding:16px 18px;border:1px solid var(--border)}
+.cmp.bad{background:var(--red-light);border-color:var(--red-border)}
+.cmp.good{background:var(--green-light);border-color:var(--green-border)}
+.cmp-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:700}
+.cmp.bad .cmp-label{color:var(--red)}
+.cmp.good .cmp-label{color:var(--green)}
+.cmp p{margin:0;font-size:14px;line-height:1.6}
+
+/* flow steps */
+.flow{margin:24px 0}
+.flow-step{display:flex;gap:16px;margin-bottom:24px;align-items:flex-start}
+.fnum{width:32px;height:32px;border-radius:50%;background:var(--ink);color:white;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:3px}
+.fcontent h4{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--ink);margin:0 0 5px;text-transform:none;letter-spacing:0}
+.fcontent p{font-size:14.5px;color:var(--muted);margin:0;line-height:1.7}
+
+/* context window bar */
+.ctx-bar{border-radius:8px;height:40px;display:flex;overflow:hidden;margin:14px 0;border:1px solid var(--border)}
+.ctx-seg{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.5px}
+.cs-sys{width:12%;background:var(--amber-light);color:var(--amber);border-right:2px solid var(--amber-border)}
+.cs-usr{width:36%;background:var(--blue-light);color:var(--blue);border-right:2px solid var(--blue-border)}
+.cs-ast{width:32%;background:var(--green-light);color:var(--green);border-right:2px solid var(--green-border)}
+.cs-new{width:14%;background:var(--purple-light);color:var(--purple);border-right:2px solid var(--purple-border)}
+.cs-ov{width:6%;background:var(--red-light);color:var(--red)}
+.ctx-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+.cleg{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+.cleg-dot{width:10px;height:10px;border-radius:2px}
+
+/* strategy cards */
+.strat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:22px 0}
+.strat-card{background:var(--warm);border:1px solid var(--border);border-radius:10px;padding:20px}
+.sc-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:700}
+.strat-card h4{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin:0 0 8px;text-transform:none;letter-spacing:0;color:var(--ink)}
+.strat-card p{font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:8px}
+.sc-eg{background:white;border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.6}
+.sc-eg .bef{color:var(--red)}
+.sc-eg .aft{color:var(--green)}
+
+/* handson */
+.handson{background:var(--purple-light);border:2px solid var(--purple-border);border-radius:12px;padding:26px 30px;margin:32px 0}
+.hs-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--purple);margin-bottom:4px}
+.hs-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--purple);letter-spacing:1px;margin-bottom:16px}
+.hs-tasks{padding-left:20px}
+.hs-tasks li{margin-bottom:10px;font-size:14.5px;line-height:1.6;color:var(--ink)}
+.hs-tasks li strong{font-family:'Syne',sans-serif;color:var(--purple)}
+
+/* memory comparison table */
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13.5px}
+thead th{background:var(--ink);color:white;padding:10px 14px;text-align:left;font-family:'Syne',sans-serif;font-weight:700;font-size:13px}
+tbody td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+tbody tr:nth-child(even) td{background:var(--warm)}
+.badge{font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 8px;border-radius:20px}
+.bg-green{background:var(--green-light);color:var(--green);border:1px solid var(--green-border)}
+.bg-amber{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border)}
+.bg-red{background:var(--red-light);color:var(--red);border:1px solid var(--red-border)}
+
+/* quiz */
+.quiz-section{background:var(--warm);border:2px solid var(--border);border-radius:14px;padding:28px 32px;margin:36px 0}
+.quiz-q{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin:20px 0 12px}
+.q-opts{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
+.q-opt{background:white;border:1.5px solid var(--border);border-radius:7px;padding:10px 14px;cursor:pointer;font-size:14px;text-align:left;font-family:'JetBrains Mono',monospace;transition:all .2s;width:100%;color:var(--ink)}
+.q-opt:hover{border-color:var(--blue);background:var(--blue-light)}
+.q-opt.correct{background:var(--green-light);border-color:var(--green);color:#0a4a25}
+.q-opt.wrong{background:var(--red-light);border-color:var(--red);color:#7a1010}
+.q-fb{font-size:13px;padding:10px 14px;border-radius:6px;display:none;font-family:'Syne',sans-serif;line-height:1.5;margin-top:4px}
+.q-fb.show{display:block}
+.q-fb.ok{background:var(--green-light);color:#0a4a25;border:1px solid var(--green-border)}
+.q-fb.no{background:var(--red-light);color:#7a1010;border:1px solid var(--red-border)}
+
+/* teaser */
+.teaser{background:var(--ink);color:white;border-radius:14px;padding:32px 36px;margin:44px 0 0;position:relative;overflow:hidden}
+.teaser::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(26,122,74,.3) 0%,transparent 70%);border-radius:50%}
+.t-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:#58a862;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
+.teaser h3{font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;color:white;margin:0 0 12px}
+.teaser p{color:rgba(255,255,255,.6);font-size:15px}
+.cliff{color:#58a862;font-style:italic;font-size:15px;margin-top:14px;border-top:1px solid rgba(255,255,255,.1);padding-top:14px}
+
+/* nav buttons */
+.ch-nav{display:flex;gap:10px;margin-top:44px;padding-top:28px;border-top:1px solid var(--border)}
+.ch-btn{flex:1;padding:12px 18px;border-radius:8px;border:1.5px solid var(--border);background:none;cursor:pointer;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;transition:all .2s;text-align:left;color:var(--ink)}
+.ch-btn.primary{background:var(--ink);color:white;border-color:var(--ink);text-align:right}
+.ch-btn:hover:not(.primary){background:var(--warm)}
+.ch-btn.primary:hover{background:var(--green);border-color:var(--green)}
+.ch-btn small{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:400;color:var(--muted);margin-bottom:3px}
+.ch-btn.primary small{color:rgba(255,255,255,.5)}
+
+code{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--warm);border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--red)}
+.divider{text-align:center;margin:36px 0;color:var(--muted);font-size:20px;letter-spacing:4px}
+ul,ol{padding-left:22px;line-height:1.9;font-size:15px;margin-bottom:14px}
+li{margin-bottom:3px}
+strong{font-family:'Syne',sans-serif}
+
+@media(max-width:640px){
+  .roles-grid,.strat-grid,.compare{grid-template-columns:1fr}
+  .ch-title{font-size:30px}
+  .chapter{padding:44px 18px 80px}
+}
+</style>
+</head>
+<body>
+
+<div class="prog-bar"><div class="prog-fill" id="pf"></div></div>
+
+<nav class="topnav">
+  <span class="nav-session">Session 7</span>
+  <button class="nav-ch active" onclick="goTo(0)">Ch.1 Problem</button>
+  <button class="nav-ch" onclick="goTo(1)">Ch.2 Chat API</button>
+  <button class="nav-ch" onclick="goTo(2)">Ch.3 Roles</button>
+  <button class="nav-ch" onclick="goTo(3)">Ch.4 System Prompt</button>
+  <button class="nav-ch" onclick="goTo(4)">Ch.5 Under the Hood</button>
+  <button class="nav-ch" onclick="goTo(5)">Ch.6 No Memory</button>
+  <button class="nav-ch" onclick="goTo(6)">Ch.7 Context Window</button>
+  <button class="nav-ch" onclick="goTo(7)">Ch.8 Memory Types</button>
+  <button class="nav-ch" onclick="goTo(8)">Ch.9 Code</button>
+  <button class="nav-ch" onclick="goTo(9)">🧠 Quiz</button>
+
+</nav>
+
+<div class="main">
+
+<!-- ══════════════════════ CH 0 ══════════════════════ -->
+<div class="chapter active" id="ch0">
+  <div class="ch-eyebrow">Session 07 — Chapter 1 of 9</div>
+  <h1 class="ch-title">One prompt.<br>One reply.<br><span class="hl-red">Now what?</span></h1>
+  <p class="ch-sub">Your Session 6 LangChain chain was perfect for single-turn tasks. But the moment a customer asks a follow-up question — everything breaks. Let's see exactly why.</p>
+
+  <div class="recall">
+    <p>In Session 6, you built: <code>chain = prompt | llm | parser</code>. One input → one output. It worked beautifully for the email classifier. But that's a <strong>single-turn task</strong> — one email, one classification. A real helpdesk chatbot needs multi-turn conversations. That's a completely different problem.</p>
+  </div>
+
+  <div class="story-box">
+    <div class="story-label">Our Use Case — All Session</div>
+    <p><strong>🏦 Bajaj Finance Helpdesk Chatbot.</strong> 80 million customers. Daily queries about loan balances, EMI schedules, prepayment charges, foreclosure documents. A customer calls in:</p>
+    <ul>
+      <li>Turn 1: <em>"My loan is BFL2024001. My EMI of ₹8,450 was deducted twice."</em></li>
+      <li>Turn 2: <em>"How many EMIs are left?"</em></li>
+      <li>Turn 3: <em>"Can I prepay ₹50,000 next month?"</em></li>
+      <li>Turn 4: <em>"What's the penalty for that?"</em></li>
+    </ul>
+    <p style="margin-bottom:0;">This is a perfectly natural 4-turn conversation. With Session 6's chain — it breaks after Turn 1. This entire session fixes that.</p>
+  </div>
+
+  <h2>Problem 1 — The Bot Has Zero Memory</h2>
+  <p>Every time you call <code>chain.invoke()</code> or <code>llm.invoke()</code>, it is a completely fresh, isolated API request. The model has never seen any previous call. It's like calling a new agent every single time.</p>
+
+  <div class="chat-demo">
+    <div class="chat-top"><div class="dr" style="width:8px;height:8px;border-radius:50%"></div><div class="dy" style="width:8px;height:8px;border-radius:50%"></div><div class="dg" style="width:8px;height:8px;border-radius:50%"></div><span style="margin-left:8px;">Bajaj Bot — Plain chain.invoke() (Session 6 approach)</span></div>
+    <div class="chat-inner">
+      <div class="clabel">Turn 1 — works fine</div>
+      <div class="cmsg user"><div class="cavatar">U</div><div class="cbubble">My loan is BFL2024001. My EMI of ₹8,450 was deducted twice this month.</div></div>
+      <div class="cmsg bot"><div class="cavatar">AI</div><div class="cbubble">I can see that loan BFL2024001 has had a double deduction of ₹8,450. This has been logged as a High Priority billing issue.</div></div>
+      <div class="clabel">Turn 2 — completely separate invoke() call, no context passed</div>
+      <div class="cmsg user"><div class="cavatar">U</div><div class="cbubble">How many EMIs are left?</div></div>
+      <div class="cmsg bot"><div class="cavatar">AI</div><div class="cerror">I don't have access to your loan details. Could you please provide your loan account number so I can assist you?</div></div>
+    </div>
+  </div>
+
+  <div class="pain-box">
+    <div class="pain-label">Root Cause</div>
+    <p>Turn 1 and Turn 2 are <strong>two completely separate HTTP requests</strong> to the OpenAI API. The model that handled Turn 1 is gone. A fresh model picks up Turn 2. It has never seen "BFL2024001" or "₹8,450". So "How many EMIs are left?" has no meaning — left for which loan?</p>
+    <p style="margin-bottom:0;">This is called being <strong>stateless</strong> — the model holds zero state between calls.</p>
+  </div>
+
+  <div class="divider">· · ·</div>
+
+  <h2>Problem 2 — Manual Context Stitching</h2>
+  <p>The naive fix: manually paste all previous turns into every new prompt. It "works" — but it's a disaster in production.</p>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">manual_stitching.py</span><span class="code-tag tag-pain">PAINFUL</span></div>
+    <div class="code-body"><pre><span style="color:var(--cc)"># What you'd have to write for EVERY new message:</span>
+full_prompt = <span style="color:var(--cg)">f"""
+Previous conversation:
+Customer: My loan is BFL2024001. EMI ₹8,450 deducted twice.
+Agent: Logged as High Priority billing issue for BFL2024001.
+Customer: How many EMIs are left?
+Agent: You have 22 EMIs remaining.
+Customer: Can I prepay ₹50,000 next month?
+Agent: Prepayment allowed after 6 months. 2% charge applies.
+Customer: What is the penalty amount?
+"""</span>
+<span style="color:var(--cc)"># Turn 4 already = massive prompt
+# Turn 10 = enormous. Turn 30 = you're paying for 30x tokens EVERY CALL</span></pre></div>
+  </div>
+
+  <div class="pain-box">
+    <div class="pain-label">3 Real Problems</div>
+    <ul>
+      <li><strong>Cost explodes linearly</strong> — Turn 10 sends 10 turns of history on every call. 10,000 daily customers × 30 turns = ruinous API costs.</li>
+      <li><strong>No role structure</strong> — the model sees one giant flat string. It can't reliably tell what's your instruction, what's the customer's message, what's its own previous reply.</li>
+      <li><strong>You manage it manually</strong> — error-prone. Forget to append one message → model instantly loses context.</li>
+    </ul>
+  </div>
+
+  <div class="divider">· · ·</div>
+
+  <h2>Problem 3 — No Behavior Control</h2>
+  <p>Without a persistent system instruction, you can't keep the bot on-brand. Every call starts from scratch. Forget to repeat "Never mention competitor banks" — and the bot might happily recommend HDFC rates.</p>
+
+  <div class="compare">
+    <div class="cmp bad">
+      <div class="cmp-label">❌ No System Instruction</div>
+      <p>"For better interest rates, you could compare HDFC at 10.5%, SBI at 10.75%, or Kotak Mahindra which has a festive offer this month..."</p>
+    </div>
+    <div class="cmp good">
+      <div class="cmp-label">✅ With System Prompt</div>
+      <p>"Bajaj Finance personal loan rates start at 11% p.a. based on your CIBIL score. Shall I check your eligibility?"</p>
+    </div>
+  </div>
+
+  <div class="win-box">
+    <div class="win-label">The Solution</div>
+    <p><strong>Chat Completion API + LangChain Memory.</strong> Chat Completion introduces structured, role-based messages that solve all 3 problems: persistent context, role separation, and behavioral control — all in one clean API.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn primary" onclick="goTo(1)"><small>Next →</small>Chat Completion API</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ CH 1 ══════════════════════ -->
+<div class="chapter" id="ch1">
+  <div class="ch-eyebrow">Session 07 — Chapter 2 of 9</div>
+  <h1 class="ch-title">Chat Completion <span class="hl-green">API</span></h1>
+  <p class="ch-sub">Not magic — just structured prompt engineering. Instead of one flat string, you send a labeled list of messages. Each message says who said it and what they said. That's the entire concept.</p>
+
+  <p>Chat Completion is an API design pattern that takes a <strong>list of role-tagged messages</strong> as input and generates the next assistant response. It turns a text-prediction engine into something that behaves like a real conversation.</p>
+
+  <div class="think-box">
+    <div class="think-label">The Key Mental Model</div>
+    <p>The LLM hasn't changed. It's still the same gpt-4o-mini predicting the next token. What changed is <strong>how you structure the input</strong>. Instead of: <code>"Answer this question: ..."</code>, you now send a structured list where every message is labeled with its role — <em>who said it</em> — and the model uses that structure to understand the conversation.</p>
+  </div>
+
+  <h2>Before vs After — What Changes</h2>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">before_after.py</span></div>
+    <div class="code-body"><pre><span style="color:var(--cc)"># ───── SESSION 6 WAY (plain invoke) ─────</span>
+result = chain.invoke({<span style="color:var(--cg)">"subject"</span>: <span style="color:var(--cg)">"..."</span>, <span style="color:var(--cg)">"body"</span>: <span style="color:var(--cg)">"..."</span>})
+<span style="color:var(--cc"># One dict in → one string out → no memory</span>
+
+<span style="color:var(--cc)"># ───── SESSION 7 WAY (chat completion) ─────</span>
+messages = [
+    {<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cy)">"system"</span>,    <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"You are a Bajaj Finance agent..."</span>},
+    {<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cb)">"user"</span>,      <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"My loan BFL2024001. EMI deducted twice."</span>},
+    {<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cm)">"assistant"</span>, <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"Logged as High Priority billing issue."</span>},
+    {<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cb)">"user"</span>,      <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"How many EMIs are left?"</span>},
+    <span style="color:var(--cc)"># ↑ model sees ALL previous turns — knows exactly what "EMIs" refers to</span>
+]</pre></div>
+  </div>
+
+  <h2>The Structure — Just 2 Fields Per Message</h2>
+  <p>Every single message in a Chat Completion request has exactly two fields. Nothing more:</p>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">message_structure.py</span></div>
+    <div class="code-body"><pre>{
+    <span style="color:var(--cg)">"role"</span>    : <span style="color:var(--cy)">"system"</span> | <span style="color:var(--cb)">"user"</span> | <span style="color:var(--cm)">"assistant"</span>,  <span style="color:var(--cc)"># WHO is speaking</span>
+    <span style="color:var(--cg)">"content"</span> : <span style="color:var(--cg)">"Any text..."</span>                        <span style="color:var(--cc)"># WHAT they're saying</span>
+}
+
+<span style="color:var(--cc)"># That's the entire Chat Completion message format.
+# Two fields. That's it. Everything builds on these two fields.</span></pre></div>
+  </div>
+
+  <div class="win-box">
+    <div class="win-label">What This Solves</div>
+    <ul>
+      <li><strong>Memory:</strong> All previous turns are in the list. The model sees full context every call.</li>
+      <li><strong>Role separation:</strong> Model clearly knows what's an instruction vs a query vs its own past reply.</li>
+      <li><strong>Behavior control:</strong> System message sets rules once — applies to every response automatically.</li>
+      <li><strong>No manual stitching:</strong> You append messages to a list. The SDK handles the rest.</li>
+    </ul>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(0)"><small>←</small>The Problem</button>
+    <button class="ch-btn primary" onclick="goTo(2)"><small>Next →</small>The 3 Roles</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ CH 2 ══════════════════════ -->
+<div class="chapter" id="ch2">
+  <div class="ch-eyebrow">Session 07 — Chapter 3 of 9</div>
+  <h1 class="ch-title">3 roles.<br><span class="hl-green">Everything</span> runs on them.</h1>
+  <p class="ch-sub">System. User. Assistant. Three labels. They define who is speaking — and that changes how the model interprets every single word in a message.</p>
+
+  <div class="story-box">
+    <div class="story-label">Bajaj Finance Call Center Analogy</div>
+    <p>Before an agent takes their first customer call, the manager briefs them privately: <em>"Be formal. Escalate billing disputes. Never quote competitor rates."</em></p>
+    <p>They never repeat this script to customers — but every response they give follows it. That briefing is the <strong>system</strong> role.</p>
+    <p style="margin-bottom:0;">Then a customer calls — that's <strong>user</strong>. The agent replies — that's <strong>assistant</strong>. Three roles. Simple.</p>
+  </div>
+
+  <div class="roles-grid">
+    <div class="role-card sys">
+      <div class="role-badge">system</div>
+      <h3>🎬 The Director</h3>
+      <p>Sets the assistant's <strong>persona, tone, rules, and domain expertise</strong>. Written once at the start by you (the developer). Never shown to the customer. Silently shapes every single response.</p>
+      <div class="role-eg">"You are a Bajaj Finance support agent. Always be formal. Never mention competitor banks. Escalate billing disputes to Level 2."</div>
+    </div>
+    <div class="role-card usr">
+      <div class="role-badge">user</div>
+      <h3>👤 The Customer</h3>
+      <p>Every message from the customer — questions, requests, information they provide. The assistant reads every user message as something it needs to respond to.</p>
+      <div class="role-eg">"My loan is BFL2024001. The EMI of ₹8,450 was deducted twice this month."</div>
+    </div>
+    <div class="role-card ast">
+      <div class="role-badge">assistant</div>
+      <h3>🤖 The Agent</h3>
+      <p>The model's generated replies. You don't write these from scratch — they're generated. But you <strong>re-send them in every subsequent request</strong> as part of the message history. That's what creates memory.</p>
+      <div class="role-eg">"I've logged loan BFL2024001 as a High Priority EMI dispute. Refund will be processed within 24 hours."</div>
+    </div>
+  </div>
+
+  <h2>Why Role Separation Matters</h2>
+  <p>Without roles, the model sees one flat blob of text and has to guess what's an instruction, what's a customer query, and what's its own previous response. With roles, everything is unambiguous.</p>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">roles_explained.py</span></div>
+    <div class="code-body"><pre><span style="color:var(--cc)"># system: behavioral rule — written by YOU, applies to ALL turns</span>
+{<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cy)">"system"</span>, <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"You are a Bajaj Finance support agent. Be concise."</span>}
+
+<span style="color:var(--cc)"># user: what the customer says</span>
+{<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cb)">"user"</span>,   <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"Loan BFL2024001 — EMI ₹8,450 deducted twice."</span>}
+
+<span style="color:var(--cc)"># assistant: what the model replied (previous turn — re-sent for memory)</span>
+{<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cm)">"assistant"</span>, <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"Logged as High Priority. Refund in 24 hours."</span>}
+
+<span style="color:var(--cc)"># user: follow-up — the model knows "EMIs" = BFL2024001 from above</span>
+{<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cb)">"user"</span>,   <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"How many EMIs are left?"</span>}
+<span style="color:var(--cc)"># ↑ No ambiguity. The model sees a structured conversation, not a blob.</span></pre></div>
+  </div>
+
+  <div class="think-box">
+    <div class="think-label">Only 3 Roles — Why?</div>
+    <p>That's genuinely all you need. <strong>System</strong> = instructions. <strong>User</strong> = input. <strong>Assistant</strong> = output. Every possible interaction in a conversation fits into one of these three. Simple enough for the model to reason about clearly. Powerful enough to build production chatbots.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(1)"><small>←</small>Chat Completion API</button>
+    <button class="ch-btn primary" onclick="goTo(3)"><small>Next →</small>System Prompt Deep Dive</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ CH 3 ══════════════════════ -->
+<div class="chapter" id="ch3">
+  <div class="ch-eyebrow">Session 07 — Chapter 4 of 9</div>
+  <h1 class="ch-title">The system prompt.<br>Your <span class="hl-amber">secret weapon.</span></h1>
+  <p class="ch-sub">Write it once. Every response for the entire session follows it. The customer never sees it. But it controls everything — tone, format, constraints, domain expertise.</p>
+
+  <p>The system prompt is the <strong>invisible instruction manual</strong> that tells the assistant who it should be and how it should behave — before the first customer message is even read. It's the single most powerful tool in conversational AI.</p>
+
+  <h2>The 5 Components of a Great System Prompt</h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="fnum">1</div>
+      <div class="fcontent">
+        <h4>Identity — who is the assistant?</h4>
+        <p>Give it a specific role. Not just "you are a helpful assistant" — that's too generic. <em>"You are a professional Bajaj Finance customer support agent with 5 years of experience in loan management."</em></p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="fnum">2</div>
+      <div class="fcontent">
+        <h4>Task scope — what can and cannot it do?</h4>
+        <p>What topics should it handle? What should it refuse or escalate? <em>"Handle EMI queries, prepayment, and foreclosure. Escalate legal threats to Level 2."</em></p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="fnum">3</div>
+      <div class="fcontent">
+        <h4>Output format — how should it respond?</h4>
+        <p>Prose? Bullet points? JSON? Short or long? <em>"Keep responses under 3 sentences. Always confirm the loan account number in your reply."</em></p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="fnum">4</div>
+      <div class="fcontent">
+        <h4>Constraints — what rules must it follow?</h4>
+        <p>Brand rules, legal constraints, tone requirements. <em>"Never suggest competitor financial products. Never promise refunds without manager approval."</em></p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="fnum">5</div>
+      <div class="fcontent">
+        <h4>Escalation rules — when to flag for humans?</h4>
+        <p>When should the bot stop and say "I'm escalating this"? <em>"If customer mentions legal action or RBI complaint, immediately say you are escalating."</em></p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Same Question — 4 Different System Prompts</h2>
+  <p>Customer asks: <em>"My EMI of ₹8,450 was deducted twice. What do I do?"</em></p>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">4_system_prompts.py</span></div>
+    <div class="code-body"><pre><span style="color:var(--cc)"># PERSONA 1 — Professional formal agent</span>
+system_1 = <span style="color:var(--cg)">"""You are a professional Bajaj Finance support agent.
+Always be formal. Keep responses under 3 sentences.
+Never mention competitor banks. Escalate billing disputes to Level 2."""</span>
+<span style="color:var(--cc)"># Output: "I sincerely apologize for the inconvenience, valued customer.
+#          The duplicate deduction for loan BFL2024001 has been escalated..."</span>
+
+<span style="color:var(--cc)"># PERSONA 2 — Structured JSON responder (for API integrations)</span>
+system_2 = <span style="color:var(--cg)">"""You are a Bajaj Finance data assistant.
+Always respond ONLY in JSON: {"category":"...","priority":"...","action":"..."}
+No extra text. No markdown."""</span>
+<span style="color:var(--cc)"># Output: {"category": "EMI_DOUBLE_DEDUCTION", "priority": "HIGH", "action": "REFUND_24H"}</span>
+
+<span style="color:var(--cc)"># PERSONA 3 — Hinglish bilingual agent</span>
+system_3 = <span style="color:var(--cg)">"""Aap ek Bajaj Finance support agent hain.
+Customer ki language match karo — Hindi ya English ya Hinglish.
+Agar customer Hinglish mein baat kare, aap bhi Hinglish mein respond karo."""</span>
+<span style="color:var(--cc)"># Output: "Aapka double EMI deduction ek genuine issue hai.
+#          Main isko abhi escalate karta hoon — refund 24 ghante mein aayega."</span>
+
+<span style="color:var(--cc)"># PERSONA 4 — Empathetic agent with full context</span>
+system_4 = <span style="color:var(--cg)">"""You are an empathetic Bajaj Finance support agent.
+Always acknowledge frustration first. Use the customer's name if provided.
+Give a specific resolution timeline. End with a reassurance."""</span>
+<span style="color:var(--cc)"># Output: "I completely understand your frustration with the double deduction.
+#          I've raised an urgent ticket — refund will be credited in 24 hours.
+#          You'll receive an SMS confirmation shortly. We apologize for this."</span></pre></div>
+  </div>
+
+  <div class="win-box">
+    <div class="win-label">Key Insight</div>
+    <p><strong>Same gpt-4o-mini model. Same customer question. 4 completely different responses.</strong> The only thing that changed was the system prompt. You're not retraining the model. You're directing it — like a director briefing an actor before a scene.</p>
+  </div>
+
+  <div class="warning-box">
+    <div class="warning-label">Important Rule</div>
+    <p>The system message is sent <strong>once, at index 0, in every API call</strong>. You don't repeat it in user messages. You don't put it in the prompt text. It's a separate message object with role="system" — and LangChain's <code>ChatPromptTemplate</code> handles this automatically for you.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(2)"><small>←</small>The 3 Roles</button>
+    <button class="ch-btn primary" onclick="goTo(4)"><small>Next →</small>Under the Hood</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ CH 4 ══════════════════════ -->
+<div class="chapter" id="ch4">
+  <div class="ch-eyebrow">Session 07 — Chapter 5 of 9</div>
+  <h1 class="ch-title">Under <span class="hl-blue">the hood.</span></h1>
+  <p class="ch-sub">Chat Completion feels like magic — the model seems to remember, understand context, maintain personality. Let's kill the mystery and see exactly what happens technically from the moment you hit invoke() to the moment text appears on screen.</p>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="fnum">1</div>
+      <div class="fcontent">
+        <h4>You send a structured message list</h4>
+        <p>Your code calls <code>chain.invoke({"input": "How many EMIs are left?"})</code>. Behind the scenes, LangChain takes your full message history — system + all previous turns + this new message — and packages it as a structured list.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="fnum">2</div>
+      <div class="fcontent">
+        <h4>SDK serializes it to a flat string</h4>
+        <p>Before sending to the model, the list is flattened into one continuous text block the model can process. Think of it as: <code>System: [rules] | User: [turn1] | AI: [reply1] | User: [new msg]</code></p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="fnum">3</div>
+      <div class="fcontent">
+        <h4>Tokenizer splits everything into tokens</h4>
+        <p>The entire flattened string — every word, number, rupee symbol, period — becomes a sequence of integer token IDs. <code>"BFL2024001"</code> might become 4-5 separate tokens. The model only understands numbers.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="fnum">4</div>
+      <div class="fcontent">
+        <h4>LLM predicts the reply — one token at a time</h4>
+        <p>The model reads all input tokens, uses its transformer attention mechanism to understand context and relationships, then generates the reply token by token. <code>"You"</code> → <code>"have"</code> → <code>"22"</code> → <code>"EMIs"</code> → <code>"remaining"</code> — each word is predicted, not retrieved.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="fnum">5</div>
+      <div class="fcontent">
+        <h4>Response wrapped as assistant message and returned</h4>
+        <p>The token sequence is decoded back to readable text, wrapped as <code>{"role": "assistant", "content": "..."}</code>, and returned to your code. You append it to your message list — now it becomes part of the history for the next turn.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">what_model_sees.txt</span><span class="code-tag tag-note">INTERNAL</span></div>
+    <div class="code-body"><pre><span style="color:var(--cc)"># Turn 4 "What is the prepayment penalty?" — here's what ACTUALLY reaches gpt-4o-mini:</span>
+
+<span style="color:var(--cy)">System:</span>  You are a professional Bajaj Finance support agent. Be formal...
+<span style="color:var(--cb)">User:</span>    My loan is BFL2024001. EMI ₹8,450 was deducted twice.
+<span style="color:var(--cm)">Assistant:</span> Logged as High Priority. Refund will be processed in 24 hours.
+<span style="color:var(--cb)">User:</span>    How many EMIs are left?
+<span style="color:var(--cm)">Assistant:</span> You have 22 EMIs remaining. Loan closes Feb 2026.
+<span style="color:var(--cb)">User:</span>    Can I prepay ₹50,000 next month?
+<span style="color:var(--cm)">Assistant:</span> Prepayment allowed after 6 months. 2% charge on outstanding.
+<span style="color:var(--cb)">User:</span>    What is the prepayment penalty?    <span style="color:var(--cc)"># ← the new message</span>
+
+<span style="color:var(--cc)"># The model "remembers" BFL2024001 because YOU included turns 1–3.
+# Remove any previous turn — model instantly forgets that turn.</span></pre></div>
+  </div>
+
+  <div class="think-box">
+    <div class="think-label">Why Responses Stream Token by Token</div>
+    <p>You've noticed that ChatGPT types out responses word by word — that's not a UI animation. That IS the generation process. The model produces one token at a time, and each token is streamed back to your UI as it's generated. LangChain's <code>.stream()</code> method gives you this exact behavior in your own apps.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(3)"><small>←</small>System Prompt</button>
+    <button class="ch-btn primary" onclick="goTo(5)"><small>Next →</small>The Memory Myth</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ CH 5 ══════════════════════ -->
+<div class="chapter" id="ch5">
+  <div class="ch-eyebrow">Session 07 — Chapter 6 of 9</div>
+  <h1 class="ch-title">LLMs have<br><span class="hl-red">no memory.</span></h1>
+  <p class="ch-sub">This is the most important concept in this session. The model is not remembering anything. Not your name. Not your loan number. Not anything from any previous call. Here's exactly what's happening — and why it matters.</p>
+
+  <div class="compare">
+    <div class="cmp bad">
+      <div class="cmp-label">❌ The Myth</div>
+      <p>The model stores your conversation. It builds up knowledge about you. When you mention BFL2024001, it remembers that for future calls. It "knows" you.</p>
+    </div>
+    <div class="cmp good">
+      <div class="cmp-label">✅ The Reality</div>
+      <p>Every API call is a <strong>completely stateless, isolated request</strong>. The model has zero knowledge of any previous call. The only reason it "remembers" is because <strong>you re-send the entire history</strong> with every new message.</p>
+    </div>
+  </div>
+
+  <h2>🎮 Try It — Remove a Turn, Watch Memory Vanish</h2>
+  <p>Toggle turns on/off below. See exactly what the model receives — and what it forgets instantly.</p>
+
+  <div style="background:#fffbef;border:1px solid #e8c96a;border-radius:10px;padding:22px 26px;margin:22px 0;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;font-weight:700;">INTERACTIVE — Toggle Turns Sent to API</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" id="t1" checked onchange="rebuildContext()" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer;">
+        <label for="t1" style="font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;"><span style="color:var(--blue)">User:</span> "Loan BFL2024001. EMI ₹8,450 deducted twice." &nbsp;<span style="color:var(--muted);font-size:10px;">← turn 1</span></label>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" id="t1r" checked onchange="rebuildContext()" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer;">
+        <label for="t1r" style="font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;"><span style="color:var(--green)">Assistant:</span> "Logged as High Priority. Refund in 24 hours."</label>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" id="t2" checked onchange="rebuildContext()" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer;">
+        <label for="t2" style="font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;"><span style="color:var(--blue)">User:</span> "How many EMIs are left?" &nbsp;<span style="color:var(--muted);font-size:10px;">← turn 2</span></label>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" id="t2r" checked onchange="rebuildContext()" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer;">
+        <label for="t2r" style="font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;"><span style="color:var(--green)">Assistant:</span> "22 EMIs remaining. Loan closes Feb 2026."</label>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:16px;height:16px;"></div>
+        <label style="font-family:'JetBrains Mono',monospace;font-size:12px;"><span style="color:var(--purple)">User:</span> "What is the prepayment penalty?" &nbsp;<span style="color:var(--muted);font-size:10px;">← new message (always sent)</span></label>
+      </div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:6px;">What the API actually receives:</div>
+    <div id="ctx-preview" style="background:var(--code-bg);border-radius:8px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;"></div>
+    <div id="ctx-verdict" style="margin-top:12px;padding:10px 14px;border-radius:6px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;"></div>
+  </div>
+  <script>
+  function rebuildContext() {
+    var rows = [];
+    rows.push({role:'system   ', content:'You are a Bajaj Finance support agent...', color:'#e5c07b'});
+    if(document.getElementById('t1').checked)  rows.push({role:'user     ', content:'Loan BFL2024001. EMI \u20b98,450 deducted twice.', color:'#61afef'});
+    if(document.getElementById('t1r').checked) rows.push({role:'assistant', content:'Logged as High Priority. Refund in 24 hours.', color:'#c678dd'});
+    if(document.getElementById('t2').checked)  rows.push({role:'user     ', content:'How many EMIs are left?', color:'#61afef'});
+    if(document.getElementById('t2r').checked) rows.push({role:'assistant', content:'22 EMIs remaining. Loan closes Feb 2026.', color:'#c678dd'});
+    rows.push({role:'user     ', content:'What is the prepayment penalty?  \u2190 NEW', color:'#98c379'});
+    var pre = document.getElementById('ctx-preview');
+    pre.innerHTML = rows.map(function(r){ return '<div><span style="color:'+r.color+';font-weight:700;">'+r.role+'</span> <span style="color:#abb2bf;">'+r.content+'</span></div>'; }).join('');
+    var hasLoan = document.getElementById('t1').checked;
+    var hasEMI  = document.getElementById('t2').checked || document.getElementById('t2r').checked;
+    var v = document.getElementById('ctx-verdict');
+    if (!hasLoan && !hasEMI) {
+      v.style.background='var(--red-light)'; v.style.color='var(--red)'; v.style.border='1px solid var(--red-border)';
+      v.textContent = '\uD83D\uDEA8 Model has NO context. Doesn\'t know the loan number or problem. Completely blind.';
+    } else if (!hasLoan) {
+      v.style.background='var(--red-light)'; v.style.color='var(--red)'; v.style.border='1px solid var(--red-border)';
+      v.textContent = '\u26A0\uFE0F Turn 1 removed \u2014 model doesn\'t know which loan! It will ask "Please provide your loan account number."';
+    } else if (!hasEMI) {
+      v.style.background='var(--amber-light)'; v.style.color='var(--amber)'; v.style.border='1px solid var(--amber-border)';
+      v.textContent = '\u26A0\uFE0F Turn 2 removed \u2014 model doesn\'t know the EMI count. Answer will be incomplete.';
+    } else {
+      v.style.background='var(--green-light)'; v.style.color='var(--green)'; v.style.border='1px solid var(--green-border)';
+      v.textContent = '\u2705 Full context present \u2014 model knows loan BFL2024001, the issue, and EMI count. It can answer correctly.';
+    }
+  }
+  rebuildContext();
+  </script>
+
+  <h2>Proof — Remove One Turn, Memory Vanishes</h2>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">memory_is_in_your_code.py</span></div>
+    <div class="code-body"><pre><span style="color:var(--cc)"># Turn 4: "What is the exact prepayment penalty?"
+# This is what you SEND to the API — the "memory" is entirely in this list:</span>
+
+messages = [
+    {<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cy)">"system"</span>,    <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"You are a Bajaj Finance support agent..."</span>},
+
+    <span style="color:var(--cc)"># ↓ Turn 1 — resent EVERY SINGLE TIME</span>
+    {<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cb)">"user"</span>,      <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"Loan BFL2024001. EMI ₹8,450 deducted twice."</span>},
+    {<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cm)">"assistant"</span>, <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"Logged as High Priority. Refund in 24 hours."</span>},
+
+    <span style="color:var(--cc)"># ↓ Turn 2 — resent EVERY SINGLE TIME</span>
+    {<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cb)">"user"</span>,      <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"How many EMIs are left?"</span>},
+    {<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cm)">"assistant"</span>, <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"22 EMIs remaining. Loan closes Feb 2026."</span>},
+
+    <span style="color:var(--cc)"># ↓ Turn 3 — resent EVERY SINGLE TIME</span>
+    {<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cb)">"user"</span>,      <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"Can I prepay ₹50,000 next month?"</span>},
+    {<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cm)">"assistant"</span>, <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"Allowed after 6 months. 2% charge applies."</span>},
+
+    <span style="color:var(--cc)"># ↓ Turn 4 — new message</span>
+    {<span style="color:var(--cg)">"role"</span>: <span style="color:var(--cb)">"user"</span>,      <span style="color:var(--cg)">"content"</span>: <span style="color:var(--cg)">"What is the exact penalty amount?"</span>},
+]
+
+<span style="color:var(--cc)"># Remove Turn 1 from this list → model has NO IDEA what loan we're talking about.
+# The "memory" is 100% in your Python list. The model is a stateless function.</span></pre></div>
+  </div>
+
+  <div class="warning-box">
+    <div class="warning-label">Why This Matters for Your App</div>
+    <p><strong>You are responsible for the conversation history.</strong> The model trusts whatever you send it. If your list has incorrect history — model gives incorrect answers confidently. If your list drops a critical turn — model forgets that context instantly. This is why memory management (Buffer, Window, Summary) is a core skill in Session 7.</p>
+  </div>
+
+  <h2>The Implication — Everything Grows</h2>
+  <p>Since you resend everything every turn, the amount of data you send to the API grows with each message. Turn 10 sends 10× more tokens than Turn 1. This has a direct impact on your API bill — and your app's performance. That's what Context Window (Chapter 7) and Memory Strategies (Chapter 8) are designed to solve.</p>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(4)"><small>←</small>Under the Hood</button>
+    <button class="ch-btn primary" onclick="goTo(6)"><small>Next →</small>Context Window</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ CH 6 ══════════════════════ -->
+<div class="chapter" id="ch6">
+  <div class="ch-eyebrow">Session 07 — Chapter 7 of 9</div>
+  <h1 class="ch-title">The <span class="hl-blue">context window.</span></h1>
+  <p class="ch-sub">Every model has a maximum number of tokens it can read in one request. Everything you send — system prompt, all previous turns, the new message — counts toward this limit. Exceed it, and the model silently forgets the oldest messages.</p>
+
+  <div class="think-box">
+    <div class="think-label">The Whiteboard Analogy</div>
+    <p>Imagine the context window as a whiteboard with a fixed size. You write messages on it. When it fills up, you erase the oldest messages to make room for new ones. The model only knows what's currently on the board — nothing that was erased.</p>
+    <p style="margin-bottom:0;">The model isn't broken when it "forgets" — it literally cannot see what's been erased from the board.</p>
+  </div>
+
+  <h2>What Fills the Context Window</h2>
+  <p>Every token in your API call counts toward the limit:</p>
+
+  <div class="ctx-bar">
+    <div class="ctx-seg cs-sys">SYSTEM</div>
+    <div class="ctx-seg cs-usr">USER TURNS</div>
+    <div class="ctx-seg cs-ast">ASSISTANT TURNS</div>
+    <div class="ctx-seg cs-new">NEW MSG</div>
+    <div class="ctx-seg cs-ov">⚠️</div>
+  </div>
+  <div class="ctx-legend">
+    <div class="cleg"><div class="cleg-dot" style="background:var(--amber-light);border:1px solid var(--amber-border)"></div>System prompt (~200 tokens)</div>
+    <div class="cleg"><div class="cleg-dot" style="background:var(--blue-light);border:1px solid var(--blue-border)"></div>Previous user messages</div>
+    <div class="cleg"><div class="cleg-dot" style="background:var(--green-light);border:1px solid var(--green-border)"></div>Previous assistant replies</div>
+    <div class="cleg"><div class="cleg-dot" style="background:var(--purple-light);border:1px solid var(--purple-border)"></div>New message</div>
+    <div class="cleg"><div class="cleg-dot" style="background:var(--red-light);border:1px solid var(--red-border)"></div>Overflow — oldest dropped silently</div>
+  </div>
+
+  <h2>What Happens at Overflow?</h2>
+
+  <div class="pain-box">
+    <div class="pain-label">Silent Failure</div>
+    <p>When you exceed the context window, the model silently drops the oldest messages. No error is thrown. The bot suddenly "forgets" the loan number from 20 turns ago. It starts asking questions it already answered. Tone becomes inconsistent. You have no idea why — unless you know about context windows.</p>
+  </div>
+
+  <h2>Context Window Size Comparison</h2>
+  <table>
+    <thead><tr><th>Model</th><th>Max Tokens</th><th>Bajaj Conversations</th><th>Size</th></tr></thead>
+    <tbody>
+      <tr><td>GPT-3.5 Turbo</td><td>16,000</td><td>~80 turns</td><td><span class="badge bg-red">Small</span></td></tr>
+      <tr><td>GPT-4 Turbo / 4o</td><td>128,000</td><td>~640 turns</td><td><span class="badge bg-amber">Medium</span></td></tr>
+      <tr><td>Claude 2.1</td><td>200,000</td><td>~1,000 turns</td><td><span class="badge bg-amber">Medium</span></td></tr>
+      <tr><td>Gemini 1.5 Pro</td><td>1,000,000</td><td>~5,000 turns</td><td><span class="badge bg-green">Large</span></td></tr>
+      <tr><td><strong>gpt-4o-mini</strong> (ours)</td><td>128,000</td><td>~640 turns</td><td><span class="badge bg-amber">Medium ✓</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="win-box">
+    <div class="win-label">For Our Bajaj Bot</div>
+    <p>gpt-4o-mini's 128K window means we rarely hit the limit for a normal support session. But in production with high traffic — and especially when you want to <strong>control cost</strong> — you always manage context deliberately. That's what the next chapter covers.</p>
+  </div>
+
+  <h2>🎮 Watch the Context Window Fill Up</h2>
+  <p>Click "Add Turn" to simulate a growing Bajaj Finance conversation. Watch what happens when the window overflows.</p>
+
+  <div style="background:#fffbef;border:1px solid #e8c96a;border-radius:10px;padding:22px 26px;margin:22px 0;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;font-weight:700;">INTERACTIVE — Context Window Simulator (limit = 8 messages for demo)</div>
+
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <button onclick="ctxAddTurn()" id="ctx-add-btn" style="padding:8px 20px;background:var(--ink);color:white;border:none;border-radius:6px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Add Turn</button>
+      <button onclick="ctxReset()" style="padding:8px 16px;background:none;border:1.5px solid var(--border);border-radius:6px;font-family:'Syne',sans-serif;font-size:13px;cursor:pointer;">Reset</button>
+      <span id="ctx-turn-count" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);align-self:center;">Turn 0 — 1 message (system prompt)</span>
+    </div>
+
+    <div style="margin-bottom:8px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:4px;">Context window (limit = 8 messages for demo):</div>
+      <div id="ctx-bar-live" style="border-radius:8px;height:44px;display:flex;overflow:hidden;border:1px solid var(--border);transition:all 0.3s;"></div>
+    </div>
+
+    <div id="ctx-msg-list" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;margin-top:12px;"></div>
+    <div id="ctx-overflow-msg" style="display:none;margin-top:12px;padding:10px 14px;border-radius:6px;background:var(--red-light);border:1px solid var(--red-border);font-family:'Syne',sans-serif;font-size:13px;color:var(--red);font-weight:700;"></div>
+  </div>
+
+  <script>
+  var CTX_LIMIT = 8;
+  var ctxMessages = [{role:'system', content:'You are a Bajaj Finance support agent...', dropped:false}];
+  var ctxTurnNum = 0;
+  var ctxConvos = [
+    ['My loan is BFL2024001. EMI \u20b98,450 deducted twice.','Logged as High Priority. Refund within 24 hours.'],
+    ['How many EMIs are left?','22 EMIs remaining. Loan closes Feb 2026.'],
+    ['Can I prepay \u20b950,000 next month?','Prepayment allowed after 6 months. 2% charge applies.'],
+    ['What is the exact penalty amount?','On \u20b950,000 prepayment, charge = \u20b91,000.'],
+    ['Can I close the loan fully?','Yes, full foreclosure allowed. Charges apply after 6 months.'],
+    ['What documents do I need?','PAN card, address proof, and last 3 EMI receipts.'],
+    ['How long does it take?','Foreclosure processed in 7 working days.'],
+    ['Will I get NOC after closure?','Yes, NOC issued within 30 days of full payment.'],
+  ];
+
+  function ctxRender() {
+    var bar = document.getElementById('ctx-bar-live');
+    var list = document.getElementById('ctx-msg-list');
+    var overflow = document.getElementById('ctx-overflow-msg');
+    var active = ctxMessages.filter(function(m){ return !m.dropped; });
+    var dropped = ctxMessages.filter(function(m){ return m.dropped; });
+
+    bar.innerHTML = '';
+    var colors = {system:'#fff8e8:#b86a00', user:'#e8eef9:#1a4fa0', assistant:'#e8f5ee:#1a7a4a', dropped:'#fdf0f0:#c42b2b'};
+    active.forEach(function(m, i) {
+      var c = colors[m.role] || colors.user; var parts = c.split(':');
+      var seg = document.createElement('div');
+      seg.style.cssText='flex:1;display:flex;align-items:center;justify-content:center;font-family:JetBrains Mono,monospace;font-size:9px;font-weight:700;border-right:1px solid rgba(0,0,0,0.08);overflow:hidden;background:'+parts[0]+';color:'+parts[1]+';';
+      seg.textContent = m.role === 'system' ? 'SYS' : m.role === 'user' ? 'USR' : 'AI';
+      bar.appendChild(seg);
+    });
+
+    list.innerHTML = ctxMessages.map(function(m, i) {
+      var label = m.dropped ? '\u274C DROPPED' : (i===0 ? '\uD83D\uDFE1 SYSTEM' : m.role === 'user' ? '\uD83D\uDFE6 USER' : '\uD83D\uDFE2 AI');
+      var opacity = m.dropped ? '0.45' : '1';
+      return '<div style="font-family:JetBrains Mono,monospace;font-size:11px;padding:4px 8px;border-radius:4px;background:'+(m.dropped?'var(--red-light)':'var(--warm)')+';border:1px solid '+(m.dropped?'var(--red-border)':'var(--border)')+';opacity:'+opacity+';line-height:1.5;"><span style="font-weight:700;color:'+(m.dropped?'var(--red)':m.role==='system'?'var(--amber)':m.role==='user'?'var(--blue)':'var(--green)')+';">'+label+'</span> <span style="color:var(--muted);">'+m.content+'</span></div>';
+    }).join('');
+
+    document.getElementById('ctx-turn-count').textContent = 'Turn '+ctxTurnNum+' \u2014 '+active.length+' / '+CTX_LIMIT+' messages in window';
+
+    if(dropped.length > 0) {
+      overflow.style.display='block';
+      overflow.textContent = '\uD83D\uDEA8 OVERFLOW: '+dropped.length+' oldest message(s) silently dropped. The model has no idea they existed. This is how "forgetting" happens \u2014 no error, no warning.';
+    } else {
+      overflow.style.display='none';
+    }
+  }
+
+  function ctxAddTurn() {
+    if(ctxTurnNum >= ctxConvos.length) {
+      document.getElementById('ctx-add-btn').textContent = 'Max turns reached';
+      document.getElementById('ctx-add-btn').disabled = true;
+      return;
+    }
+    var pair = ctxConvos[ctxTurnNum];
+    ctxMessages.push({role:'user',      content:pair[0], dropped:false});
+    ctxMessages.push({role:'assistant', content:pair[1], dropped:false});
+    ctxTurnNum++;
+
+    while(ctxMessages.filter(function(m){return !m.dropped;}).length > CTX_LIMIT) {
+      var first = ctxMessages.findIndex(function(m){return !m.dropped;});
+      ctxMessages[first].dropped = true;
+    }
+    ctxRender();
+  }
+
+  function ctxReset() {
+    ctxMessages = [{role:'system', content:'You are a Bajaj Finance support agent...', dropped:false}];
+    ctxTurnNum = 0;
+    var btn = document.getElementById('ctx-add-btn');
+    btn.textContent = '+ Add Turn'; btn.disabled = false;
+    ctxRender();
+  }
+  ctxRender();
+  </script>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(5)"><small>←</small>No Memory Myth</button>
+    <button class="ch-btn primary" onclick="goTo(7)"><small>Next →</small>Memory Types</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ CH 7 ══════════════════════ -->
+<div class="chapter" id="ch7">
+  <div class="ch-eyebrow">Session 07 — Chapter 8 of 9</div>
+  <h1 class="ch-title">3 memory types.<br><span class="hl-green">Pick the right one.</span></h1>
+  <p class="ch-sub">Since you control the conversation history, you get to decide what to include and what to drop. Three strategies — each with different cost and memory tradeoffs. Understanding when to use which one is a production skill.</p>
+
+  <h2>Why Memory Strategy = Cost Strategy</h2>
+  <p>Every token you include in the message list = money. A 30-turn Bajaj Finance conversation could be 6,000+ tokens of history alone — resent on every single turn. With 10,000 daily customers, the difference between Buffer and Summary Memory could be thousands of rupees per day in API costs.</p>
+
+  <div class="strat-grid">
+    <div class="strat-card">
+      <div class="sc-num">Strategy 01</div>
+      <h4>Buffer Memory</h4>
+      <p>Keep <strong>every single turn</strong> in full detail. Nothing is ever dropped or compressed. The model always has complete context.</p>
+      <div class="sc-eg">
+        <span class="bef">Cost:</span> Grows linearly every turn<br>
+        <span class="bef">Context loss:</span> None<br>
+        <span class="aft">Best for:</span> Short sessions (&lt;10 turns), critical context where nothing can be lost
+      </div>
+    </div>
+    <div class="strat-card">
+      <div class="sc-num">Strategy 02</div>
+      <h4>Window Memory</h4>
+      <p>Keep only the <strong>last K turns</strong>. Oldest turns are silently dropped. Cost stays fixed regardless of conversation length.</p>
+      <div class="sc-eg">
+        <span class="bef">Cost:</span> Fixed — always k messages<br>
+        <span class="bef">Context loss:</span> Early turns dropped<br>
+        <span class="aft">Best for:</span> Long sessions where recent context matters most
+      </div>
+    </div>
+    <div class="strat-card">
+      <div class="sc-num">Strategy 03</div>
+      <h4>Summary Memory</h4>
+      <p>After every N turns, <strong>compress old turns</strong> into a concise summary via another LLM call. Keep summary + recent turns.</p>
+      <div class="sc-eg">
+        <span class="bef">Cost:</span> Low + summarizer overhead<br>
+        <span class="bef">Context loss:</span> Minimal (key facts preserved)<br>
+        <span class="aft">Best for:</span> Long sessions where details matter
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ INTERACTIVE: HOW EACH MEMORY STRATEGY WORKS ══ -->
+  <h2>🎮 See How Each Memory Strategy Works — Step by Step</h2>
+  <p>Pick a strategy. Click "Next Turn" to walk through a real Bajaj Finance conversation. Watch exactly what gets stored, what gets sent to the LLM, and what gets dropped or summarised — turn by turn.</p>
+
+  <div style="background:var(--warm);border:2px solid var(--border);border-radius:12px;padding:24px 28px;margin:22px 0;">
+
+    <!-- Strategy Picker -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+      <button onclick="simSet('buffer')"  id="sim-buf" style="flex:1;min-width:100px;padding:10px 8px;border-radius:8px;border:2px solid var(--border);background:var(--ink);color:white;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Buffer</button>
+      <button onclick="simSet('window')"  id="sim-win" style="flex:1;min-width:100px;padding:10px 8px;border-radius:8px;border:2px solid var(--border);background:white;font-family:'Syne',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;">Window k=4</button>
+      <button onclick="simSet('summary')" id="sim-sum" style="flex:1;min-width:100px;padding:10px 8px;border-radius:8px;border:2px solid var(--border);background:white;font-family:'Syne',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;">Summary</button>
+    </div>
+
+    <!-- Strategy explanation banner -->
+    <div id="sim-explainer" style="border-radius:8px;padding:12px 16px;margin-bottom:18px;font-family:'Syne',sans-serif;font-size:13px;line-height:1.6;font-weight:600;"></div>
+
+    <!-- Turn controls -->
+    <div style="display:flex;gap:8px;margin-bottom:18px;align-items:center;">
+      <button onclick="simNext()" id="sim-next-btn" style="padding:9px 20px;background:var(--green);color:white;border:none;border-radius:6px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">▶ Next Turn</button>
+      <button onclick="simReset()" style="padding:9px 14px;background:none;border:1.5px solid var(--border);border-radius:6px;font-family:'Syne',sans-serif;font-size:13px;cursor:pointer;">↺ Reset</button>
+      <span id="sim-turn-label" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);">Turn 0 of 6</span>
+    </div>
+
+    <!-- Two-column layout: Store (left) | What LLM sees (right) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+
+      <!-- LEFT: Memory Store -->
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;font-weight:700;">Memory store (your Python)</div>
+        <div id="sim-store" style="background:var(--code-bg);border-radius:8px;padding:12px 14px;min-height:160px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.9;overflow-y:auto;max-height:260px;"></div>
+      </div>
+
+      <!-- RIGHT: What LLM sees this call -->
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;font-weight:700;">What LLM receives this call</div>
+        <div id="sim-llm" style="background:var(--code-bg);border-radius:8px;padding:12px 14px;min-height:160px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.9;overflow-y:auto;max-height:260px;"></div>
+      </div>
+    </div>
+
+    <!-- Event log -->
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;font-weight:700;">Event log</div>
+    <div id="sim-log" style="background:white;border:1px solid var(--border);border-radius:8px;padding:10px 14px;min-height:44px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8;max-height:100px;overflow-y:auto;"></div>
+
+    <!-- Stat bar -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;">
+      <div style="background:white;border:1px solid var(--border);border-radius:6px;padding:8px 10px;text-align:center;">
+        <div id="sim-s-turns"  style="font-size:20px;font-weight:700;font-family:'Syne',sans-serif;">0</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);">turns</div>
+      </div>
+      <div style="background:white;border:1px solid var(--border);border-radius:6px;padding:8px 10px;text-align:center;">
+        <div id="sim-s-stored" style="font-size:20px;font-weight:700;font-family:'Syne',sans-serif;color:var(--blue);">0</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);">stored msgs</div>
+      </div>
+      <div style="background:white;border:1px solid var(--border);border-radius:6px;padding:8px 10px;text-align:center;">
+        <div id="sim-s-sent"   style="font-size:20px;font-weight:700;font-family:'Syne',sans-serif;color:var(--green);">0</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);">sent to LLM</div>
+      </div>
+      <div style="background:white;border:1px solid var(--border);border-radius:6px;padding:8px 10px;text-align:center;">
+        <div id="sim-s-drop"   style="font-size:20px;font-weight:700;font-family:'Syne',sans-serif;color:var(--red);">0</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);">dropped/compressed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PRODUCTION ARCHITECTURE ══ -->
+  <h2>🏗️ Production Architecture — How Memory Works at Scale</h2>
+  <p>In your laptop demo, history lives in a Python dict in RAM. In production with 80 million Bajaj Finance customers, that's not enough. Here's the real architecture.</p>
+
+  <!-- Tab switcher -->
+  <div style="display:flex;gap:0;margin:18px 0 0;border-bottom:2px solid var(--border);">
+    <button onclick="archTab('dev')"  id="arch-dev"  style="padding:9px 18px;border:none;border-bottom:3px solid var(--ink);background:none;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:-2px;">Dev / Demo</button>
+    <button onclick="archTab('prod')" id="arch-prod" style="padding:9px 18px;border:none;border-bottom:3px solid transparent;background:none;font-family:'Syne',sans-serif;font-size:13px;cursor:pointer;margin-bottom:-2px;color:var(--muted);">Production</button>
+    <button onclick="archTab('flow')" id="arch-flow" style="padding:9px 18px;border:none;border-bottom:3px solid transparent;background:none;font-family:'Syne',sans-serif;font-size:13px;cursor:pointer;margin-bottom:-2px;color:var(--muted);">Request Flow</button>
+  </div>
+
+  <div id="arch-dev-panel" style="margin-top:0;">
+    <div style="background:var(--blue-light);border:1px solid var(--blue-border);border-radius:0 0 10px 10px;padding:20px 24px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;font-weight:700;">Dev / Demo Setup (what you built in this session)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div style="background:white;border-radius:8px;padding:14px;border:1px solid var(--blue-border);">
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:6px;">Where history lives</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--blue);background:var(--blue-light);padding:6px 10px;border-radius:4px;">Python dict in RAM</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6;">store = {} in your app.py. Lives as long as the Python process runs. Dies when you restart.</div>
+        </div>
+        <div style="background:white;border-radius:8px;padding:14px;border:1px solid var(--blue-border);">
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:6px;">Session lookup</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--blue);background:var(--blue-light);padding:6px 10px;border-radius:4px;">store[session_id]</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6;">A simple dict key lookup. Works perfectly for 1–10 users on your laptop.</div>
+        </div>
+      </div>
+      <div style="background:var(--red-light);border:1px solid var(--red-border);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--red);font-family:'Syne',sans-serif;font-weight:600;">
+        ❌ Breaks at scale: 10,000 concurrent users × 30 messages each = RAM explosion. Server restart = all history gone. Multiple servers = history not shared.
+      </div>
+    </div>
+  </div>
+
+  <div id="arch-prod-panel" style="display:none;margin-top:0;">
+    <div style="background:var(--green-light);border:1px solid var(--green-border);border-radius:0 0 10px 10px;padding:20px 24px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;font-weight:700;">Production Setup (Bajaj Finance at scale)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div style="background:white;border-radius:8px;padding:14px;border:1px solid var(--green-border);">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);margin-bottom:6px;font-weight:700;">SHORT-TERM MEMORY</div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px;">Redis</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Active conversation history. Key = session_id. TTL = 30 mins. Lightning fast reads. Auto-expires idle sessions.</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--green-light);padding:4px 8px;border-radius:4px;margin-top:8px;color:var(--green);">GET session:rahul_xyz</div>
+        </div>
+        <div style="background:white;border-radius:8px;padding:14px;border:1px solid var(--green-border);">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);margin-bottom:6px;font-weight:700;">LONG-TERM MEMORY</div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px;">PostgreSQL / MongoDB</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Permanent conversation archive. Stores all sessions per customer. Used for audit, dispute resolution, analytics.</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--green-light);padding:4px 8px;border-radius:4px;margin-top:8px;color:var(--green);">conversations.customer_id</div>
+        </div>
+        <div style="background:white;border-radius:8px;padding:14px;border:1px solid var(--green-border);">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);margin-bottom:6px;font-weight:700;">SESSION ROUTING</div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px;">Load Balancer</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Multiple app servers. Any server can handle any customer because history is in Redis — not in server RAM.</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--green-light);padding:4px 8px;border-radius:4px;margin-top:8px;color:var(--green);">Nginx / AWS ALB</div>
+        </div>
+      </div>
+      <div style="background:var(--green-light);border:1px solid var(--green-border);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--green);font-family:'Syne',sans-serif;font-weight:600;">
+        ✅ At scale: Redis handles 100k+ concurrent sessions. Any server failure → another server picks up seamlessly. Customer history survives restarts. Costs stay predictable.
+      </div>
+    </div>
+  </div>
+
+  <div id="arch-flow-panel" style="display:none;margin-top:0;">
+    <div style="background:var(--purple-light);border:1px solid var(--purple-border);border-radius:0 0 10px 10px;padding:20px 24px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;font-weight:700;">One Request — Full Flow (Production)</div>
+
+      <!-- Step-by-step flow -->
+      <div style="display:flex;flex-direction:column;gap:0;">
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--purple-border);">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--purple);color:white;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+          <div><div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;">Customer sends message</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">POST /chat  { customer_id: "C001", message: "How many EMIs are left?" }</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;background:white;border:1px solid var(--purple-border);border-radius:4px;padding:4px 8px;margin-top:6px;color:var(--purple);">session_id = "C001_" + timestamp  ← generated from customer_id</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--purple-border);">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--purple);color:white;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+          <div><div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;">Fetch history from Redis</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">get_session_history(session_id) → Redis GET → returns InMemoryChatMessageHistory loaded from JSON</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;background:white;border:1px solid var(--purple-border);border-radius:4px;padding:4px 8px;margin-top:6px;color:var(--purple);">If Redis miss → load from PostgreSQL (customer returning after session expired)</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--purple-border);">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--purple);color:white;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+          <div><div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;">Apply memory strategy</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Window: trim to last k. Summary: check if N turns reached, run summarizer chain. Buffer: send all.</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;background:white;border:1px solid var(--purple-border);border-radius:4px;padding:4px 8px;margin-top:6px;color:var(--purple);">RunnableWithMessageHistory handles this automatically</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--purple-border);">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--purple);color:white;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">4</div>
+          <div><div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;">Call LLM → get reply</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">[system] + [trimmed/summarised history] + [new message] → gpt-4o-mini → AIMessage</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;background:white;border:1px solid var(--purple-border);border-radius:4px;padding:4px 8px;margin-top:6px;color:var(--purple);">~200ms average response time</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--purple-border);">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--purple);color:white;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">5</div>
+          <div><div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;">Save updated history</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Append new HumanMessage + AIMessage. Write back to Redis (30 min TTL). Async write to PostgreSQL.</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;background:white;border:1px solid var(--purple-border);border-radius:4px;padding:4px 8px;margin-top:6px;color:var(--purple);">Redis SET session:C001_xyz JSON TTL 1800</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--green);color:white;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">6</div>
+          <div><div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;">Return reply to customer</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">{ reply: "You have 22 EMIs remaining. Loan closes Feb 2026." } → customer's app</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;background:white;border:1px solid var(--purple-border);border-radius:4px;padding:4px 8px;margin-top:6px;color:var(--green);">Total: ~250ms end to end ✓</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;background:white;border-radius:8px;padding:14px;border:1px solid var(--purple-border);">
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:8px;color:var(--purple);">The only code change: swap InMemoryChatMessageHistory → Redis-backed class</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8;color:var(--muted);">
+          <span style="color:#e06c75;"># Dev (this session)</span><br>
+          store = {}<br>
+          def get_session_history(sid): return store.setdefault(sid, InMemoryChatMessageHistory())<br><br>
+          <span style="color:#58a862;"># Production — same interface, Redis backend</span><br>
+          def get_session_history(sid):<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;data = redis.get("session:" + sid)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;history = InMemoryChatMessageHistory()<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;if data: history.add_messages(json.loads(data))<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;return history<br>
+          <span style="color:#e5c07b;"># RunnableWithMessageHistory — unchanged. Chain — unchanged. Strategy — unchanged.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  function archTab(t) {
+    ['dev','prod','flow'].forEach(function(k){
+      document.getElementById('arch-'+k+'-panel').style.display = k===t ? 'block' : 'none';
+      var btn = document.getElementById('arch-'+k);
+      btn.style.borderBottom = k===t ? '3px solid var(--ink)' : '3px solid transparent';
+      btn.style.fontWeight   = k===t ? '700' : '400';
+      btn.style.color        = k===t ? 'var(--ink)' : 'var(--muted)';
+    });
+  }
+
+  // ── Simulator ──────────────────────────────────────────────────
+  var simStrat  = 'buffer';
+  var simTurn   = 0;
+  var simStore  = [];  // memory store state
+  var simSumText = '';
+  var simDropped = 0;
+
+  var simConvos = [
+    {u:'Loan BFL2024001. EMI \u20b98,450 deducted twice.', a:'Logged as High Priority. Refund in 24 hours.'},
+    {u:'How many EMIs are left?',                          a:'22 EMIs remaining. Loan closes Feb 2026.'},
+    {u:'Can I prepay \u20b950,000 next month?',            a:'Allowed after 6 months. 2% charge applies.'},
+    {u:'What is the exact penalty?',                       a:'On \u20b950k = \u20b91,000 penalty charge.'},
+    {u:'Can I foreclose fully?',                           a:'Yes, after 6 months. Charges apply.'},
+    {u:'What documents do I need?',                        a:'PAN, address proof, last 3 EMI receipts.'},
+  ];
+
+  var simExplainers = {
+    buffer:  {bg:'var(--blue-light)',  border:'var(--blue-border)',  color:'var(--blue)',   text:'Buffer Memory: Every single turn is kept and re-sent to the LLM every call. Nothing is ever dropped. Cost grows linearly — Turn 6 sends 13 messages.'},
+    window:  {bg:'var(--amber-light)', border:'var(--amber-border)', color:'var(--amber)',  text:'Window Memory (k=4): Only the last 4 messages are kept in the window. When Turn 3 comes in, Turn 1\'s messages are silently dropped from the store. LLM never sees them again.'},
+    summary: {bg:'var(--green-light)', border:'var(--green-border)', color:'var(--green)',  text:'Summary Memory: After every 2 turns, old messages are compressed into a 1-line summary by a summarizer chain. Summary + recent turns = small, fixed-size context. Early facts preserved!'},
+  };
+
+  function simSet(s) {
+    simStrat = s;
+    ['buffer','window','summary'].forEach(function(k){
+      var m = {'buffer':'buf','window':'win','summary':'sum'};
+      var b = document.getElementById('sim-'+m[k]);
+      b.style.background = k===s ? 'var(--ink)' : 'white';
+      b.style.color      = k===s ? 'white' : 'var(--ink)';
+      b.style.fontWeight = k===s ? '700' : '400';
+    });
+    simReset();
+  }
+
+  function simNext() {
+    if(simTurn >= simConvos.length) return;
+    var pair = simConvos[simTurn];
+    simTurn++;
+
+    if(simStrat === 'buffer') {
+      simStore.push({t:'u', text:pair.u});
+      simStore.push({t:'a', text:pair.a});
+      simLog('Turn '+simTurn+': added 2 messages. Store now has '+(simStore.length)+' messages. All sent to LLM.');
+
+    } else if(simStrat === 'window') {
+      simStore.push({t:'u', text:pair.u});
+      simStore.push({t:'a', text:pair.a});
+      var k = 4;
+      var before = simStore.length;
+      if(simStore.length > k) {
+        var drop = simStore.length - k;
+        simDropped += drop;
+        simStore = simStore.slice(drop);
+        simLog('Turn '+simTurn+': added 2 msgs \u2192 dropped '+drop+' oldest. Window = last '+k+' messages only.');
+      } else {
+        simLog('Turn '+simTurn+': added 2 msgs. Store = '+simStore.length+'/'+k+' \u2014 window not full yet.');
+      }
+
+    } else if(simStrat === 'summary') {
+      simStore.push({t:'u', text:pair.u});
+      simStore.push({t:'a', text:pair.a});
+      if(simTurn % 2 === 0 && simStore.length > 4) {
+        var toSummarise = simStore.slice(0, simStore.length - 2);
+        simSumText = '[Summary of '+toSummarise.length+' msgs: customer has loan BFL2024001, double EMI, refund pending, '+(simTurn>=4?'prepay query':'no prepay yet')+']';
+        simStore = simStore.slice(simStore.length - 2);
+        simDropped += toSummarise.length;
+        simLog('Turn '+simTurn+': summarizer ran \u2192 compressed '+toSummarise.length+' old msgs into 1 summary. Keeping last 2 msgs.');
+      } else {
+        simLog('Turn '+simTurn+': added 2 msgs. '+(simTurn%2===0?'(summarizer will run next even turn)':'(summarizer runs on even turns)'));
+      }
+    }
+
+    simRender();
+    if(simTurn >= simConvos.length) { document.getElementById('sim-next-btn').textContent='All turns done'; document.getElementById('sim-next-btn').disabled=true; }
+  }
+
+  function simRender() {
+    var e = simExplainers[simStrat];
+    var ex = document.getElementById('sim-explainer');
+    ex.style.background=e.bg; ex.style.border='1px solid '+e.border; ex.style.color=e.color;
+    ex.textContent=e.text;
+
+    var storeHTML = '';
+    if(simStrat==='summary' && simSumText) {
+      storeHTML += '<div style="color:#58a862;padding:2px 0;">[SYS-SUMMARY] <span style="color:#e5c07b;">'+simSumText+'</span></div>';
+    }
+    simStore.forEach(function(m){
+      storeHTML += '<div style="color:'+(m.t==='u'?'#61afef':'#c678dd')+';padding:2px 0;">'+(m.t==='u'?'[USR] ':'[AI]  ')+'<span style="color:#abb2bf;">'+m.text+'</span></div>';
+    });
+    document.getElementById('sim-store').innerHTML = storeHTML || '<span style="color:#5c6370;">empty</span>';
+
+    var llmHTML = '<div style="color:#e5c07b;padding:2px 0;">[SYS]  You are a Bajaj Finance support agent...</div>';
+    if(simStrat==='summary' && simSumText) {
+      llmHTML += '<div style="color:#58a862;padding:2px 0;">[SUM]  <span style="color:#abb2bf;">'+simSumText+'</span></div>';
+    }
+    var inWindow = simStrat==='window' ? simStore : simStore;
+    inWindow.forEach(function(m){
+      llmHTML += '<div style="color:'+(m.t==='u'?'#61afef':'#c678dd')+';padding:2px 0;">'+(m.t==='u'?'[USR] ':'[AI]  ')+'<span style="color:#abb2bf;">'+m.text+'</span></div>';
+    });
+    if(simTurn > 0) {
+      var last = simConvos[simTurn-1];
+      llmHTML += '<div style="color:#98c379;padding:2px 0;">[NEW]  <span style="color:#abb2bf;">'+last.u+' \u2190 current</span></div>';
+    }
+    document.getElementById('sim-llm').innerHTML = llmHTML;
+
+    var sentCount = 1 + (simStrat==='summary' && simSumText ? 1 : 0) + simStore.length + (simTurn>0?1:0);
+    document.getElementById('sim-s-turns').textContent  = simTurn;
+    document.getElementById('sim-s-stored').textContent = simStore.length + (simSumText?1:0);
+    document.getElementById('sim-s-sent').textContent   = simTurn > 0 ? sentCount : 0;
+    document.getElementById('sim-s-drop').textContent   = simDropped;
+    document.getElementById('sim-turn-label').textContent = 'Turn '+simTurn+' of '+simConvos.length;
+  }
+
+  function simLog(msg) {
+    var el = document.getElementById('sim-log');
+    el.innerHTML = '<div>\u25B6 '+msg+'</div>' + el.innerHTML;
+  }
+
+  function simReset() {
+    simTurn=0; simStore=[]; simSumText=''; simDropped=0;
+    document.getElementById('sim-next-btn').textContent='▶ Next Turn';
+    document.getElementById('sim-next-btn').disabled=false;
+    document.getElementById('sim-log').innerHTML='';
+    simRender();
+  }
+
+  simSet('buffer');
+  </script>
+
+  <h2>Side-by-Side — Same 10-Turn Bajaj Conversation</h2>
+  <table>
+    <thead><tr><th>Turn</th><th>Buffer (msgs sent)</th><th>Window k=6 (msgs sent)</th><th>Summary (msgs sent)</th></tr></thead>
+    <tbody>
+      <tr><td>Turn 1</td><td>2</td><td>2</td><td>2</td></tr>
+      <tr><td>Turn 3</td><td>6</td><td>6</td><td>6</td></tr>
+      <tr><td>Turn 5</td><td>10</td><td>6 (capped)</td><td>5 (summary kicked in)</td></tr>
+      <tr><td>Turn 8</td><td>16</td><td>6 (capped)</td><td>5 (1 summary + 4 recent)</td></tr>
+      <tr><td>Turn 10</td><td>20</td><td>6 (capped)</td><td>5 (1 summary + 4 recent)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Buffer Memory — Deep Dive</h2>
+  <p>The simplest strategy. <code>InMemoryChatMessageHistory</code> stores every HumanMessage and AIMessage in a Python list. <code>RunnableWithMessageHistory</code> automatically fetches this history, injects it into your prompt's <code>MessagesPlaceholder</code>, and saves the new turn back — all without you writing any glue code.</p>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">buffer_memory_explained.py</span></div>
+    <div class="code-body"><pre><span style="color:var(--cc)"># InMemoryChatMessageHistory — a simple Python list with helper methods</span>
+history = InMemoryChatMessageHistory()
+history.add_user_message(<span style="color:var(--cg)">"Loan BFL2024001 — EMI ₹8,450 deducted twice."</span>)
+history.add_ai_message(<span style="color:var(--cg)">"Logged as High Priority. Refund in 24 hours."</span>)
+<span style="color:var(--cc)"># history.messages = [HumanMessage(...), AIMessage(...)]
+# This ENTIRE list gets injected into your prompt on every turn.</span>
+
+<span style="color:var(--cc)"># MessagesPlaceholder — a slot in your ChatPromptTemplate</span>
+prompt = ChatPromptTemplate.from_messages([
+    (<span style="color:var(--cg)">"system"</span>, <span style="color:var(--cg)">"You are a Bajaj Finance support agent..."</span>),
+    MessagesPlaceholder(variable_name=<span style="color:var(--cg)">"history"</span>),  <span style="color:var(--cc)"># ← history goes HERE</span>
+    (<span style="color:var(--cg)">"human"</span>, <span style="color:var(--cg)">"{input}"</span>),                          <span style="color:var(--cc)"># ← new message goes HERE</span>
+])
+
+<span style="color:var(--cc)"># RunnableWithMessageHistory — automates everything</span>
+<span style="color:var(--cc)"># Before every .invoke():
+#   1. Fetches history from store using session_id
+#   2. Injects into MessagesPlaceholder
+#   3. Calls the LLM
+#   4. Saves new HumanMessage + AIMessage back to store</span>
+bajaj_bot = RunnableWithMessageHistory(
+    chain,
+    get_session_history,    <span style="color:var(--cc)"># session_id → InMemoryChatMessageHistory</span>
+    input_messages_key=<span style="color:var(--cg)">"input"</span>,
+    history_messages_key=<span style="color:var(--cg)">"history"</span>,
+)</pre></div>
+  </div>
+
+  <h2>session_id — How Multiple Users Are Isolated</h2>
+  <p>The <code>session_id</code> is the key that maps to a specific customer's conversation history. Rahul's history never leaks into Priya's. In production, your <code>session_id</code> = customer ID from your database.</p>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">session_isolation.py</span></div>
+    <div class="code-body"><pre><span style="color:var(--cc)"># Each session_id gets its own isolated history</span>
+cfg_rahul = {<span style="color:var(--cg)">"configurable"</span>: {<span style="color:var(--cg)">"session_id"</span>: <span style="color:var(--cg)">"session_rahul"</span>}}
+cfg_priya = {<span style="color:var(--cg)">"configurable"</span>: {<span style="color:var(--cg)">"session_id"</span>: <span style="color:var(--cg)">"session_priya"</span>}}
+
+bajaj_bot.invoke({<span style="color:var(--cg)">"input"</span>: <span style="color:var(--cg)">"Loan BFL2024001 — double EMI deduction"</span>}, config=cfg_rahul)
+bajaj_bot.invoke({<span style="color:var(--cg)">"input"</span>: <span style="color:var(--cg)">"Loan BFL9988 — want to foreclose"</span>}, config=cfg_priya)
+
+r_rahul = bajaj_bot.invoke({<span style="color:var(--cg)">"input"</span>: <span style="color:var(--cg)">"What is my issue status?"</span>}, config=cfg_rahul)
+r_priya = bajaj_bot.invoke({<span style="color:var(--cg)">"input"</span>: <span style="color:var(--cg)">"What is my issue status?"</span>}, config=cfg_priya)
+<span style="color:var(--cc)"># Same question — completely different answers because different histories</span>
+<span style="color:var(--cc)"># Rahul: "Your EMI double deduction has been escalated..."
+# Priya: "Your foreclosure request for BFL9988 is under review..."</span></pre></div>
+  </div>
+
+  <h2>Window Memory — How It Works</h2>
+  <p>LangChain v0.3 doesn't have a built-in Window Memory — you build one by subclassing <code>BaseChatMessageHistory</code> and overriding <code>add_messages()</code> to trim the list to the last k messages after every addition.</p>
+
+  <h2>🎮 Window Memory — Live Simulator</h2>
+  <p>Watch the sliding window in action. Change k, add turns, see exactly which messages get dropped.</p>
+
+  <div style="background:var(--purple-light);border:1px solid var(--purple-border);border-radius:10px;padding:22px 26px;margin:22px 0;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;font-weight:700;">INTERACTIVE — WindowChatMessageHistory</div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <label style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);">Window size k =</label>
+        <button onclick="wmSetK(2)" id="wk2" class="wkbtn" style="padding:4px 12px;border-radius:5px;border:1.5px solid var(--purple-border);background:white;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;">2</button>
+        <button onclick="wmSetK(4)" id="wk4" class="wkbtn" style="padding:4px 12px;border-radius:5px;border:1.5px solid var(--purple-border);background:var(--purple-light);color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;font-weight:700;">4</button>
+        <button onclick="wmSetK(6)" id="wk6" class="wkbtn" style="padding:4px 12px;border-radius:5px;border:1.5px solid var(--purple-border);background:white;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;">6</button>
+      </div>
+      <button onclick="wmAddTurn()" style="padding:8px 18px;background:var(--purple);color:white;border:none;border-radius:6px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Add Turn</button>
+      <button onclick="wmReset()" style="padding:8px 14px;background:none;border:1.5px solid var(--purple-border);border-radius:6px;font-family:'Syne',sans-serif;font-size:13px;cursor:pointer;">Reset</button>
+    </div>
+
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:6px;">All messages ever added (faded = dropped from window):</div>
+    <div id="wm-all" style="display:flex;flex-wrap:wrap;gap:6px;min-height:60px;margin-bottom:14px;padding:10px;background:rgba(255,255,255,0.5);border-radius:8px;border:1px solid var(--purple-border);"></div>
+
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--purple);font-weight:700;margin-bottom:6px;">What LLM sees right now (inside window):</div>
+    <div id="wm-window" style="display:flex;flex-wrap:wrap;gap:6px;min-height:60px;padding:10px;background:white;border-radius:8px;border:2px dashed var(--purple-border);"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px;">
+      <div style="background:rgba(255,255,255,0.6);border-radius:6px;padding:10px;text-align:center;">
+        <div id="wm-total" style="font-size:22px;font-weight:700;font-family:'Syne',sans-serif;">0</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">total added</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.6);border-radius:6px;padding:10px;text-align:center;">
+        <div id="wm-kept" style="font-size:22px;font-weight:700;font-family:'Syne',sans-serif;color:var(--green);">0</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">in window</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.6);border-radius:6px;padding:10px;text-align:center;">
+        <div id="wm-dropped" style="font-size:22px;font-weight:700;font-family:'Syne',sans-serif;color:var(--red);">0</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">dropped</div>
+      </div>
+    </div>
+    <div id="wm-log" style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);max-height:80px;overflow-y:auto;"></div>
+  </div>
+
+  <script>
+  var wmK = 4, wmAllMsgs = [], wmTurn = 0;
+  var wmUserMsgs  = ['Loan BFL2024001. EMI \u20b98,450 deducted twice.','How many EMIs are left?','Can I prepay \u20b950k next month?','What is the penalty?','Can I foreclose the loan?','What documents do I need?'];
+  var wmAIMsgs    = ['Logged as High Priority. Refund in 24h.','22 EMIs remaining, closes Feb 2026.','Allowed after 6 months. 2% charge.','Penalty on \u20b950k = \u20b91,000.','Yes, foreclosure allowed.','PAN, address proof, last 3 EMI receipts.'];
+
+  function wmSetK(k) {
+    wmK = k;
+    ['2','4','6'].forEach(function(v){
+      var b = document.getElementById('wk'+v);
+      if(parseInt(v)===k){ b.style.background='var(--purple)'; b.style.color='white'; b.style.fontWeight='700'; }
+      else { b.style.background='white'; b.style.color='var(--ink)'; b.style.fontWeight='400'; }
+    });
+    wmRenderWindow();
+    wmLog('k changed to '+k+' \u2014 window trimmed');
+  }
+
+  function wmAddTurn() {
+    if(wmTurn >= wmUserMsgs.length) return;
+    wmAllMsgs.push({type:'user', text:wmUserMsgs[wmTurn], turn:wmTurn+1});
+    wmAllMsgs.push({type:'ai',   text:wmAIMsgs[wmTurn],   turn:wmTurn+1});
+    wmTurn++;
+    var before = wmAllMsgs.length;
+    var dropped = Math.max(0, before - wmK);
+    wmLog('Turn '+wmTurn+' added \u2014 '+(dropped>0?'dropped '+dropped+' oldest message(s)':''+wmAllMsgs.length+'/'+wmK+' slots used'));
+    wmRenderWindow();
+  }
+
+  function wmRenderWindow() {
+    var kept = wmAllMsgs.slice(-wmK);
+    var keptSet = new Set(kept.map(function(m){ return m.turn+'_'+m.type; }));
+
+    document.getElementById('wm-all').innerHTML = wmAllMsgs.map(function(m){
+      var inWindow = keptSet.has(m.turn+'_'+m.type);
+      var bg = inWindow ? (m.type==='user'?'#e8eef9':'#e8f5ee') : '#fdf0f0';
+      var color = inWindow ? (m.type==='user'?'#1a4fa0':'#1a7a4a') : '#c42b2b';
+      var opacity = inWindow ? '1' : '0.4';
+      return '<div style="background:'+bg+';color:'+color+';border:1px solid '+(inWindow?(m.type==='user'?'#a0bce8':'#a8d9bc'):'#f0b8b8')+';border-radius:6px;padding:6px 10px;font-family:JetBrains Mono,monospace;font-size:11px;opacity:'+opacity+';max-width:200px;"><div style="font-weight:700;margin-bottom:2px;">T'+m.turn+' '+(m.type==='user'?'You':'AI')+'</div><div style="font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.text.substring(0,28)+'...</div></div>';
+    }).join('') || '<span style="color:var(--muted);font-size:12px;font-family:JetBrains Mono,monospace;">No messages yet</span>';
+
+    document.getElementById('wm-window').innerHTML = kept.map(function(m){
+      var bg = m.type==='user'?'#e8eef9':'#e8f5ee';
+      var color = m.type==='user'?'#1a4fa0':'#1a7a4a';
+      return '<div style="background:'+bg+';color:'+color+';border:1px solid '+(m.type==='user'?'#a0bce8':'#a8d9bc')+';border-radius:6px;padding:6px 10px;font-family:JetBrains Mono,monospace;font-size:11px;max-width:200px;"><div style="font-weight:700;margin-bottom:2px;">T'+m.turn+' '+(m.type==='user'?'You':'AI')+'</div><div style="font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.text.substring(0,28)+'...</div></div>';
+    }).join('') || '<span style="color:var(--muted);font-size:12px;font-family:JetBrains Mono,monospace;padding:4px;">empty \u2014 add turns above</span>';
+
+    document.getElementById('wm-total').textContent   = wmAllMsgs.length;
+    document.getElementById('wm-kept').textContent    = kept.length;
+    document.getElementById('wm-dropped').textContent = Math.max(0, wmAllMsgs.length - wmK);
+  }
+
+  function wmLog(msg) {
+    var logEl = document.getElementById('wm-log');
+    logEl.innerHTML = '<div>\u25B6 '+msg+'</div>' + logEl.innerHTML;
+  }
+
+  function wmReset() {
+    wmAllMsgs=[]; wmTurn=0;
+    wmRenderWindow();
+    document.getElementById('wm-log').innerHTML='';
+    wmLog('Reset. Ready.');
+  }
+  wmRenderWindow();
+  </script>
+
+  <h2>Summary Memory — How It Works</h2>
+  <p>A separate "summarizer chain" is called every N turns. It takes old messages, compresses them into 2–3 sentences, and stores the summary as a <code>SystemMessage</code> prepended to the recent turns. The main chain sees: <em>[Summary of earlier turns] + [Last 2 full turns] + [New message]</em>.</p>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(6)"><small>←</small>Context Window</button>
+    <button class="ch-btn primary" onclick="goTo(8)"><small>Next →</small>Code Lab</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ CH 8 ══════════════════════ -->
+<div class="chapter" id="ch8">
+  <div class="ch-eyebrow">Session 07 — Chapter 9 of 9</div>
+  <h1 class="ch-title">Build it.<br><span class="hl-green">Step by step.</span></h1>
+  <p class="ch-sub">Three progressive steps. Start with what breaks. Fix it with Buffer Memory. Add a System Prompt. Run experiments that make the concepts stick.</p>
+
+  <h2>Step 1 — Prove the Problem</h2>
+  <p>Run this first. See exactly how Turn 2 breaks with a plain <code>llm.invoke()</code>. This is your baseline.</p>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">step1_broken.py</span><span class="code-tag tag-pain">BROKEN</span></div>
+    <div class="code-body"><pre><span style="color:var(--cc)"># pip install langchain langchain-openai python-dotenv</span>
+<span style="color:var(--cb)">from</span> langchain_openai <span style="color:var(--cb)">import</span> ChatOpenAI
+<span style="color:var(--cb)">import</span> os
+<span style="color:var(--cb)">from</span> dotenv <span style="color:var(--cb)">import</span> load_dotenv
+
+load_dotenv()
+llm = ChatOpenAI(model=<span style="color:var(--cg)">"gpt-4o-mini"</span>, temperature=<span style="color:var(--co)">0</span>)
+
+<span style="color:var(--cc)"># Turn 1 — works fine</span>
+r1 = llm.invoke(<span style="color:var(--cg)">"My loan is BFL2024001. My EMI of ₹8,450 was deducted twice."</span>)
+<span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"Turn 1: {r1.content}"</span>)
+
+<span style="color:var(--cc)"># Turn 2 — completely separate call, no context</span>
+r2 = llm.invoke(<span style="color:var(--cg)">"How many EMIs are left?"</span>)
+<span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"Turn 2: {r2.content}"</span>)
+<span style="color:var(--cc)"># Expected output: "I don't have your loan details. Could you provide your account number?"</span></pre></div>
+  </div>
+
+  <h2>Step 2 — Buffer Memory (the fix)</h2>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">step2_buffer_memory.py</span><span class="code-tag tag-win">FIXED</span></div>
+    <div class="code-body"><pre><span style="color:var(--cb)">from</span> langchain_openai <span style="color:var(--cb)">import</span> ChatOpenAI
+<span style="color:var(--cb)">from</span> langchain_core.prompts <span style="color:var(--cb)">import</span> ChatPromptTemplate, MessagesPlaceholder
+<span style="color:var(--cb)">from</span> langchain_core.output_parsers <span style="color:var(--cb)">import</span> StrOutputParser
+<span style="color:var(--cb)">from</span> langchain_core.chat_history <span style="color:var(--cb)">import</span> InMemoryChatMessageHistory
+<span style="color:var(--cb)">from</span> langchain_core.runnables.history <span style="color:var(--cb)">import</span> RunnableWithMessageHistory
+<span style="color:var(--cb)">from</span> dotenv <span style="color:var(--cb)">import</span> load_dotenv
+
+load_dotenv()
+llm = ChatOpenAI(model=<span style="color:var(--cg)">"gpt-4o-mini"</span>, temperature=<span style="color:var(--co)">0</span>)
+
+<span style="color:var(--cc)"># 1. Prompt with MessagesPlaceholder slot for history</span>
+prompt = ChatPromptTemplate.from_messages([
+    (<span style="color:var(--cg)">"system"</span>, <span style="color:var(--cg)">"You are a Bajaj Finance support agent. Be concise."</span>),
+    MessagesPlaceholder(variable_name=<span style="color:var(--cg)">"history"</span>),  <span style="color:var(--cc)"># ← history injected here</span>
+    (<span style="color:var(--cg)">"human"</span>, <span style="color:var(--cg)">"{input}"</span>),                          <span style="color:var(--cc)"># ← new message</span>
+])
+
+<span style="color:var(--cc)"># 2. LCEL chain (same as Session 6)</span>
+chain = prompt | llm | StrOutputParser()
+
+<span style="color:var(--cc)"># 3. History store — one entry per session_id</span>
+store = {}
+<span style="color:var(--cb)">def</span> get_history(session_id: str):
+    <span style="color:var(--cb)">if</span> session_id <span style="color:var(--cb)">not in</span> store:
+        store[session_id] = InMemoryChatMessageHistory()
+    <span style="color:var(--cb)">return</span> store[session_id]
+
+<span style="color:var(--cc)"># 4. Wrap chain with memory automation</span>
+bajaj_bot = RunnableWithMessageHistory(
+    chain, get_history,
+    input_messages_key=<span style="color:var(--cg)">"input"</span>,
+    history_messages_key=<span style="color:var(--cg)">"history"</span>,
+)
+
+cfg = {<span style="color:var(--cg)">"configurable"</span>: {<span style="color:var(--cg)">"session_id"</span>: <span style="color:var(--cg)">"bajaj_001"</span>}}
+
+<span style="color:var(--cc)"># 4-turn conversation — all work because history is resent automatically</span>
+turns = [
+    <span style="color:var(--cg)">"My loan is BFL2024001. EMI ₹8,450 was deducted twice."</span>,
+    <span style="color:var(--cg)">"How many EMIs are left?"</span>,
+    <span style="color:var(--cg)">"Can I prepay ₹50,000 next month?"</span>,
+    <span style="color:var(--cg)">"What is the prepayment penalty amount?"</span>,
+]
+
+<span style="color:var(--cb)">for</span> i, turn <span style="color:var(--cb)">in</span> enumerate(turns, <span style="color:var(--co)">1</span>):
+    reply = bajaj_bot.invoke({<span style="color:var(--cg)">"input"</span>: turn}, config=cfg)
+    msgs = len(store[<span style="color:var(--cg)">"bajaj_001"</span>].messages)
+    <span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"[Turn {i}] Customer: {turn}"</span>)
+    <span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"         Bot: {reply}"</span>)
+    <span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"         History size: {msgs} messages\n"</span>)</pre></div>
+  </div>
+
+  <h2>Step 3 — Full System Prompt</h2>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">step3_full_bot.py</span><span class="code-tag tag-win">PRODUCTION READY</span></div>
+    <div class="code-body"><pre>system_prompt = <span style="color:var(--cg)">"""You are a professional Bajaj Finance customer support agent.
+- Always be formal and polite
+- Keep responses under 3 sentences
+- Never suggest or mention competitor financial products
+- If customer mentions a billing dispute → say: 'Escalating to Level 2 team'
+- If customer mentions legal action or RBI complaint → say: 'Escalating to Legal team'
+- End every reply with: 'Is there anything else I can help you with?' """</span>
+
+prompt = ChatPromptTemplate.from_messages([
+    (<span style="color:var(--cg)">"system"</span>, system_prompt),
+    MessagesPlaceholder(variable_name=<span style="color:var(--cg)">"history"</span>),
+    (<span style="color:var(--cg)">"human"</span>, <span style="color:var(--cg)">"{input}"</span>),
+])
+chain = prompt | llm | StrOutputParser()
+bajaj_bot = RunnableWithMessageHistory(chain, get_history,
+    input_messages_key=<span style="color:var(--cg)">"input"</span>, history_messages_key=<span style="color:var(--cg)">"history"</span>)
+
+cfg = {<span style="color:var(--cg)">"configurable"</span>: {<span style="color:var(--cg)">"session_id"</span>: <span style="color:var(--cg)">"test_001"</span>}}
+
+<span style="color:var(--cc)"># Test all behavior constraints:</span>
+test_queries = [
+    <span style="color:var(--cg)">"My loan is BFL2024001. What is my current EMI?"</span>,
+    <span style="color:var(--cg)">"Should I switch to HDFC for a better rate?"</span>,      <span style="color:var(--cc)"># should decline</span>
+    <span style="color:var(--cg)">"I was overcharged last month — this is theft!"</span>,   <span style="color:var(--cc)"># should escalate to Level 2</span>
+    <span style="color:var(--cg)">"I will file an RBI complaint tomorrow."</span>,           <span style="color:var(--cc)"># should escalate to Legal</span>
+]
+
+<span style="color:var(--cb)">for</span> q <span style="color:var(--cb)">in</span> test_queries:
+    r = bajaj_bot.invoke({<span style="color:var(--cg)">"input"</span>: q}, config=cfg)
+    <span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"Customer: {q}\nBot: {r}\n"</span>)</pre></div>
+  </div>
+
+  <div class="handson">
+    <div class="hs-title">🧪 4 Experiments to Run</div>
+    <div class="hs-sub">After running the code above</div>
+    <ul class="hs-tasks">
+      <li><strong>Experiment 1:</strong> Change the system prompt to Hinglish. Run the same 4 test queries. Notice the bot's language adapts while rules stay the same.</li>
+      <li><strong>Experiment 2:</strong> Remove the system prompt entirely. Ask "Should I switch to HDFC?" — see it freely recommend competitors.</li>
+      <li><strong>Experiment 3:</strong> After a 5-turn conversation, print <code>store["bajaj_001"].messages</code> and count how many messages are sent on Turn 5. Calculate cost at gpt-4o-mini rates ($0.00015/1K tokens).</li>
+      <li><strong>Experiment 4:</strong> Start a second session with <code>session_id="bajaj_002"</code>. Ask "What was my loan number?" without providing it. Confirm the model doesn't cross-contaminate sessions.</li>
+    </ul>
+  </div>
+
+  <div class="teaser">
+    <div class="t-label">Coming Up — Session 08</div>
+    <h3>Function Calling & Tools</h3>
+    <p>Your Bajaj Finance bot now holds multi-turn conversations with memory and consistent behavior. But it's still making up EMI numbers — it has no access to real data.</p>
+    <div class="cliff">What if the bot could actually call <code>get_loan_status("BFL2024001")</code>, <code>get_emi_schedule(loan_id)</code>, and <code>check_interest_rate("personal_loan")</code> — fetching real numbers from the actual database? That's Session 8: Function Calling.</div>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(7)"><small>←</small>Memory Types</button>
+    <button class="ch-btn primary" onclick="goTo(9)"><small>Next →</small>Quiz</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ QUIZ ══════════════════════ -->
+<div class="chapter" id="ch9">
+  <div class="ch-eyebrow">Session 07 — Quiz</div>
+  <h1 class="ch-title">Test your<br><span class="hl-green">understanding.</span></h1>
+  <p class="ch-sub">8 questions. All based on the Bajaj Finance examples from this session. No tricks — just checking if the concepts landed.</p>
+
+  <div class="quiz-section">
+
+    <div class="quiz-q">Q1. You send Turn 1 with loan number BFL2024001. For Turn 2, you call <code>llm.invoke("How many EMIs are left?")</code> with no history. What happens?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">The model remembers BFL2024001 from Turn 1 automatically</button>
+      <button class="q-opt" onclick="ans(this,true)">The model asks for the loan number again — it never saw Turn 1</button>
+      <button class="q-opt" onclick="ans(this,false)">The model uses its training data to figure out what loan you mean</button>
+      <button class="q-opt" onclick="ans(this,false)">The model returns an API error</button>
+    </div>
+    <div class="q-fb">LLMs are completely stateless. Turn 1 and Turn 2 are separate HTTP requests to the API. The model on Turn 2 has never seen Turn 1. It starts fresh every single time.</div>
+
+    <div class="quiz-q">Q2. In a Chat Completion message list, which role would you use for: "You are a Bajaj Finance agent. Never mention competitor banks."?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">user</button>
+      <button class="q-opt" onclick="ans(this,true)">system</button>
+      <button class="q-opt" onclick="ans(this,false)">assistant</button>
+      <button class="q-opt" onclick="ans(this,false)">Any of the three work the same way</button>
+    </div>
+    <div class="q-fb">The system role is for behavioral instructions written by the developer. It shapes every assistant response for the entire session without being visible to the user.</div>
+
+    <div class="quiz-q">Q3. You have a 20-turn Bajaj Finance conversation with Buffer Memory. On Turn 21, how many messages does your API call send?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">Just the 1 new message</button>
+      <button class="q-opt" onclick="ans(this,false)">The last 5 messages</button>
+      <button class="q-opt" onclick="ans(this,true)">System prompt + all 20 previous turns + the new message = 42 messages</button>
+      <button class="q-opt" onclick="ans(this,false)">The last 10 messages (LangChain auto-limits)</button>
+    </div>
+    <div class="q-fb">Buffer Memory sends everything. System + 20 turns × 2 messages (human + AI) + 1 new = 42 messages. That's why Buffer Memory costs grow linearly and why Window/Summary Memory exist.</div>
+
+    <div class="quiz-q">Q4. What does <code>MessagesPlaceholder(variable_name="history")</code> do inside a ChatPromptTemplate?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">It stores messages in a database</button>
+      <button class="q-opt" onclick="ans(this,true)">It creates a slot in the prompt where past conversation messages get injected at runtime</button>
+      <button class="q-opt" onclick="ans(this,false)">It limits the number of messages sent</button>
+      <button class="q-opt" onclick="ans(this,false)">It creates a new session for each conversation</button>
+    </div>
+    <div class="q-fb">MessagesPlaceholder is a slot — a named placeholder. When RunnableWithMessageHistory runs, it takes the history from your store and fills this slot with the past messages before sending to the LLM.</div>
+
+    <div class="quiz-q">Q5. After a 30-turn conversation, the Bajaj bot suddenly forgets the loan number from Turn 1. No error was thrown. What most likely happened?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">The model decided the loan number was no longer relevant</button>
+      <button class="q-opt" onclick="ans(this,false)">The API key expired mid-conversation</button>
+      <button class="q-opt" onclick="ans(this,true)">The context window was exceeded — Turn 1 was silently dropped</button>
+      <button class="q-opt" onclick="ans(this,false)">The session_id changed accidentally</button>
+    </div>
+    <div class="q-fb">When the total token count exceeds the model's context window, the oldest messages are silently dropped — no error, no warning. The model simply cannot see what's no longer in the window.</div>
+
+    <div class="quiz-q">Q6. Rahul has a 40-turn loan dispute conversation. Which memory strategy should you use to keep costs manageable while ensuring the bot still knows Rahul's original complaint from Turn 1?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">Buffer Memory — it remembers everything</button>
+      <button class="q-opt" onclick="ans(this,false)">Window Memory k=4 — keeps last 2 turns only</button>
+      <button class="q-opt" onclick="ans(this,true)">Summary Memory — compresses old turns, preserves key facts like loan number and complaint type</button>
+      <button class="q-opt" onclick="ans(this,false)">No memory strategy needed — gpt-4o-mini has 128K tokens</button>
+    </div>
+    <div class="q-fb">Summary Memory is the best fit: it keeps costs low (compresses instead of resending everything) while preserving critical context (Rahul's name, BFL2024001, original complaint details) in the summary.</div>
+
+    <div class="quiz-q">Q7. You want to run two concurrent Bajaj Finance sessions — one for Rahul (loan BFL2024001) and one for Priya (loan BFL9988). How do you ensure they don't share history?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">Create two separate RunnableWithMessageHistory instances</button>
+      <button class="q-opt" onclick="ans(this,true)">Use a different session_id for each customer in the config dict</button>
+      <button class="q-opt" onclick="ans(this,false)">Clear the history store between each customer</button>
+      <button class="q-opt" onclick="ans(this,false)">Use two separate LLM instances</button>
+    </div>
+    <div class="q-fb">The session_id in config={"configurable": {"session_id": "..."}} is the key that maps to a specific InMemoryChatMessageHistory. Different session_id = completely isolated history. One bot can handle thousands of concurrent users this way.</div>
+
+    <div class="quiz-q">Q8. In LangChain v0.3, which component wraps your LCEL chain and automatically fetches, injects, and saves conversation history on every invoke()?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">InMemoryChatMessageHistory</button>
+      <button class="q-opt" onclick="ans(this,false)">MessagesPlaceholder</button>
+      <button class="q-opt" onclick="ans(this,false)">ChatPromptTemplate</button>
+      <button class="q-opt" onclick="ans(this,true)">RunnableWithMessageHistory</button>
+    </div>
+    <div class="q-fb">RunnableWithMessageHistory is the automation layer. It wraps any LCEL chain and before every .invoke(): 1) fetches history using session_id, 2) injects into MessagesPlaceholder, 3) calls the LLM, 4) saves the new turn back to the store.</div>
+
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(8)"><small>←</small>Code Lab</button>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+let cur = 0;
+const chs = document.querySelectorAll('.chapter');
+const navs = document.querySelectorAll('.nav-ch');
+const pf = document.getElementById('pf');
+
+function goTo(n) {
+  chs[cur].classList.remove('active');
+  navs[cur].classList.remove('active');
+  cur = n;
+  chs[cur].classList.add('active');
+  navs[cur].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+  pf.style.width = (n / (chs.length - 1) * 100) + '%';
+}
+
+function ans(btn, correct) {
+  const opts = btn.parentElement.querySelectorAll('.q-opt');
+  opts.forEach(o => o.disabled = true);
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  const fb = btn.parentElement.nextElementSibling;
+  fb.classList.add('show', correct ? 'ok' : 'no');
+  fb.textContent = (correct ? '✅ ' : '❌ ') + fb.textContent;
+}
+
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  pf.style.width = Math.max(parseFloat(pf.style.width)||0, h.scrollTop/(h.scrollHeight-h.clientHeight)*100) + '%';
+});
+</script>
+</body>
+</html>

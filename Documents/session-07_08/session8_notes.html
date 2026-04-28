@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session 8 — Function Calling & Tool Integration</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@500;600;700&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0a0a0f;--paper:#f7f6f0;--warm:#f0ede2;--surface:#e4e0d4;
+  --green:#1a7a4a;--green-light:#e8f5ee;--green-border:#a8d9bc;
+  --blue:#1a4fa0;--blue-light:#e8eef9;--blue-border:#a0bce8;
+  --red:#c42b2b;--red-light:#fdf0f0;--red-border:#f0b8b8;
+  --amber:#b86a00;--amber-light:#fff8e8;--amber-border:#f0d090;
+  --purple:#6020b0;--purple-light:#f5f0ff;--purple-border:#c8a0f0;
+  --teal:#0a8080;--teal-light:#e8f5f5;--teal-border:#a0d0d0;
+  --muted:#6b6560;--border:#d8d4c8;
+  --code-bg:#0d1117;--cg:#58a862;--cy:#e5c07b;--cr:#e06c75;--cb:#61afef;--cm:#c678dd;--cc:#5c6370;--co:#d19a66;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.8;overflow-x:hidden}
+
+.prog-bar{position:fixed;top:0;left:0;right:0;height:3px;background:var(--border);z-index:1000}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue),var(--purple));width:0%;transition:width .4s ease}
+
+.topnav{position:fixed;top:3px;left:0;right:0;height:54px;background:rgba(247,246,240,.95);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;z-index:999;backdrop-filter:blur(10px);overflow-x:auto;gap:2px}
+.nav-session{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-right:12px;white-space:nowrap;flex-shrink:0;background:var(--green-light);padding:3px 8px;border-radius:4px;border:1px solid var(--green-border)}
+.nav-ch{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);padding:5px 10px;border-radius:5px;cursor:pointer;background:none;border:none;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.nav-ch:hover{background:var(--warm);color:var(--ink)}
+.nav-ch.active{background:var(--ink);color:white}
+.nav-right{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0}
+
+.main{padding-top:57px}
+.chapter{display:none;max-width:820px;margin:0 auto;padding:56px 28px 100px}
+.chapter.active{display:block;animation:fadeIn .5s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.ch-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px}
+.ch-title{font-family:'Clash Display',sans-serif;font-size:44px;font-weight:700;line-height:1.05;margin-bottom:18px;letter-spacing:-0.5px}
+.ch-title .hl-green{color:var(--green)}
+.ch-title .hl-blue{color:var(--blue)}
+.ch-title .hl-red{color:var(--red)}
+.ch-title .hl-amber{color:var(--amber)}
+.ch-title .hl-purple{color:var(--purple)}
+.ch-title .hl-teal{color:var(--teal)}
+.ch-sub{font-size:17px;color:var(--muted);max-width:600px;line-height:1.7;font-style:italic;margin-bottom:36px}
+
+.recall{background:var(--amber-light);border:2px solid var(--amber-border);border-radius:12px;padding:22px 26px;margin:0 0 36px;position:relative}
+.recall::before{content:'← Session 7 Recall';position:absolute;top:-13px;left:14px;background:var(--paper);padding:0 8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;font-weight:700}
+
+h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin:44px 0 18px;line-height:1.2}
+h3{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;margin:32px 0 12px}
+h4{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin:22px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+p{margin-bottom:16px;color:var(--ink)}
+
+.story-box{background:#fffbef;border:1px solid #e8c96a;border-radius:10px;padding:22px 26px;margin:28px 0;position:relative}
+.story-box::before{content:'📖';position:absolute;top:-14px;left:18px;background:var(--paper);padding:0 6px;font-size:18px}
+.story-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+
+.pain-box{background:var(--red-light);border:1px solid var(--red-border);border-radius:10px;padding:22px 26px;margin:28px 0;position:relative}
+.pain-box::before{content:'🔥';position:absolute;top:-14px;left:18px;background:var(--paper);padding:0 6px;font-size:18px}
+.pain-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+
+.win-box{background:var(--green-light);border:1px solid var(--green-border);border-radius:10px;padding:22px 26px;margin:28px 0;position:relative}
+.win-box::before{content:'✅';position:absolute;top:-14px;left:18px;background:var(--paper);padding:0 6px;font-size:18px}
+.win-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+
+.think-box{background:var(--purple-light);border:1px solid var(--purple-border);border-radius:10px;padding:22px 26px;margin:28px 0;position:relative}
+.think-box::before{content:'💡';position:absolute;top:-14px;left:18px;background:var(--paper);padding:0 6px;font-size:18px}
+.think-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+
+.warning-box{background:var(--amber-light);border:1px solid var(--amber-border);border-radius:10px;padding:22px 26px;margin:28px 0;position:relative}
+.warning-box::before{content:'⚠️';position:absolute;top:-14px;left:18px;background:var(--paper);padding:0 6px;font-size:18px}
+
+.note-box{background:var(--teal-light);border:1px solid var(--teal-border);border-radius:10px;padding:22px 26px;margin:28px 0;position:relative}
+.note-box::before{content:'📌';position:absolute;top:-14px;left:18px;background:var(--paper);padding:0 6px;font-size:18px}
+.note-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--teal);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+
+.code-block{background:var(--code-bg);border-radius:10px;margin:22px 0;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.14)}
+.code-header{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.07);gap:8px}
+.code-dots{display:flex;gap:5px}
+.code-dot{width:10px;height:10px;border-radius:50%}
+.dr{background:#ff5f57}.dy{background:#febc2e}.dg{background:#28c840}
+.code-filename{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.4);margin-left:4px}
+.code-tag{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px}
+.tag-pain{background:rgba(224,108,117,.2);color:#e06c75}
+.tag-win{background:rgba(88,168,98,.2);color:#58a862}
+.tag-note{background:rgba(97,175,239,.2);color:#61afef}
+.tag-build{background:rgba(198,120,221,.2);color:#c678dd}
+.code-body{padding:18px 20px;overflow-x:auto}
+.code-body pre{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.75;color:#abb2bf;white-space:pre}
+
+/* ──────── HERO ANIMATION ──────── */
+.hero-viz{background:linear-gradient(135deg,var(--ink) 0%,#1a1a2e 100%);border-radius:16px;padding:40px;margin:32px 0;position:relative;overflow:hidden;color:white}
+.hero-viz::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at 30% 50%,rgba(88,168,98,.15) 0%,transparent 50%),radial-gradient(circle at 70% 50%,rgba(97,175,239,.15) 0%,transparent 50%)}
+.hero-flow{display:flex;align-items:center;justify-content:space-between;gap:20px;position:relative;flex-wrap:wrap}
+.flow-node{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:18px 20px;flex:1;min-width:140px;text-align:center;position:relative;transition:all .3s;backdrop-filter:blur(10px)}
+.flow-node:hover{background:rgba(255,255,255,.1);transform:translateY(-3px)}
+.flow-node .fn-icon{font-size:28px;margin-bottom:8px;display:block;animation:float 3s ease-in-out infinite}
+.flow-node:nth-child(1) .fn-icon{animation-delay:0s}
+.flow-node:nth-child(3) .fn-icon{animation-delay:.5s}
+.flow-node:nth-child(5) .fn-icon{animation-delay:1s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.flow-node .fn-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.flow-node .fn-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:white}
+.flow-arrow{font-size:24px;color:rgba(255,255,255,.4);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ──────── COMPARISON ──────── */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.cmp{border-radius:8px;padding:16px 18px;border:1px solid var(--border)}
+.cmp.bad{background:var(--red-light);border-color:var(--red-border)}
+.cmp.good{background:var(--green-light);border-color:var(--green-border)}
+.cmp-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:700}
+.cmp.bad .cmp-label{color:var(--red)}
+.cmp.good .cmp-label{color:var(--green)}
+.cmp p{margin:0;font-size:14px;line-height:1.6}
+
+/* ──────── CHAT DEMO ──────── */
+.chat-demo{background:var(--warm);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin:22px 0}
+.chat-top{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.chat-inner{padding:18px;display:flex;flex-direction:column;gap:12px}
+.cmsg{display:flex;gap:10px;align-items:flex-start;animation:slideIn .4s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.cmsg.user{flex-direction:row-reverse}
+.cavatar{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;flex-shrink:0}
+.cmsg.bot .cavatar{background:var(--green-light);color:var(--green);border:1px solid var(--green-border)}
+.cmsg.user .cavatar{background:var(--ink);color:white}
+.cmsg.tool .cavatar{background:var(--purple-light);color:var(--purple);border:1px solid var(--purple-border)}
+.cbubble{background:white;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;color:var(--ink);max-width:76%;line-height:1.6;font-family:'Lora',serif}
+.cmsg.user .cbubble{background:var(--ink);color:white;border-color:var(--ink)}
+.cmsg.tool .cbubble{background:var(--purple-light);border-color:var(--purple-border);font-family:'JetBrains Mono',monospace;font-size:12px}
+.cerror{background:var(--red-light);border:1px solid var(--red-border);border-radius:8px;padding:10px 14px;font-size:13.5px;color:#7a1010;max-width:76%;line-height:1.6;font-family:'Lora',serif}
+.cfake{background:#fff8f8;border:1px dashed var(--red-border);border-radius:8px;padding:10px 14px;font-size:13.5px;color:var(--ink);max-width:76%;line-height:1.6;font-family:'Lora',serif;position:relative}
+.cfake::after{content:'⚠️ hallucinated';position:absolute;right:8px;top:-8px;font-size:10px;background:var(--red);color:white;padding:2px 6px;border-radius:3px;font-family:'JetBrains Mono',monospace;letter-spacing:1px}
+.creal{background:#f8fdf9;border:1px dashed var(--green-border);border-radius:8px;padding:10px 14px;font-size:13.5px;color:var(--ink);max-width:76%;line-height:1.6;font-family:'Lora',serif;position:relative}
+.creal::after{content:'✅ from database';position:absolute;right:8px;top:-8px;font-size:10px;background:var(--green);color:white;padding:2px 6px;border-radius:3px;font-family:'JetBrains Mono',monospace;letter-spacing:1px}
+.clabel{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);text-align:center;letter-spacing:2px;text-transform:uppercase;margin:4px 0}
+
+/* ──────── TOOL TYPES CARDS ──────── */
+.tool-types{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:22px 0}
+.tool-type{border-radius:12px;padding:22px;border:1px solid var(--border);transition:all .3s;cursor:pointer;background:white}
+.tool-type:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,.08)}
+.tool-type.data{border-top:4px solid var(--blue)}
+.tool-type.comp{border-top:4px solid var(--amber)}
+.tool-type.action{border-top:4px solid var(--red)}
+.tt-icon{font-size:32px;margin-bottom:10px}
+.tt-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:700}
+.tool-type.data .tt-label{color:var(--blue)}
+.tool-type.comp .tt-label{color:var(--amber)}
+.tool-type.action .tt-label{color:var(--red)}
+.tool-type h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin:0 0 8px}
+.tool-type p{font-size:13.5px;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.tt-eg{background:var(--warm);border-radius:6px;padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink);line-height:1.5;border-left:3px solid var(--border)}
+
+/* ──────── TOOL CARD ANATOMY ──────── */
+.anatomy{background:white;border:2px solid var(--border);border-radius:14px;padding:26px;margin:24px 0;position:relative}
+.anatomy-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:16px;color:var(--ink);text-align:center}
+.anatomy-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.anatomy-field{background:var(--warm);border-radius:8px;padding:14px 16px;border-left:3px solid}
+.anatomy-field.f1{border-left-color:var(--blue)}
+.anatomy-field.f2{border-left-color:var(--green)}
+.anatomy-field.f3{border-left-color:var(--amber)}
+.anatomy-field.f4{border-left-color:var(--purple)}
+.af-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;font-weight:700}
+.anatomy-field.f1 .af-label{color:var(--blue)}
+.anatomy-field.f2 .af-label{color:var(--green)}
+.anatomy-field.f3 .af-label{color:var(--amber)}
+.anatomy-field.f4 .af-label{color:var(--purple)}
+.af-desc{font-size:12.5px;color:var(--muted);line-height:1.6}
+
+/* ──────── LIFECYCLE FLOW ──────── */
+.lifecycle{margin:28px 0}
+.lc-step{display:flex;gap:18px;margin-bottom:20px;align-items:flex-start;position:relative}
+.lc-step:not(:last-child)::after{content:'';position:absolute;left:19px;top:44px;bottom:-20px;width:2px;background:linear-gradient(to bottom,var(--green),transparent);opacity:.3}
+.lc-num{width:40px;height:40px;border-radius:50%;background:var(--ink);color:white;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1}
+.lc-content{flex:1;background:white;border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+.lc-content h4{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--ink);margin:0 0 6px;text-transform:none;letter-spacing:0}
+.lc-content p{font-size:13.5px;color:var(--muted);margin:0;line-height:1.7}
+.lc-code{margin-top:10px;background:var(--code-bg);border-radius:6px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#abb2bf;line-height:1.6;overflow-x:auto}
+
+/* ──────── BUILD STEPS ──────── */
+.build-step{background:white;border:2px solid var(--border);border-radius:12px;padding:24px;margin:24px 0;position:relative}
+.build-step::before{content:attr(data-step);position:absolute;top:-12px;left:20px;background:var(--ink);color:white;padding:4px 12px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;font-weight:700}
+.bs-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px}
+.bs-goal{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);letter-spacing:1px;margin-bottom:16px}
+
+/* ──────── TEST OUTPUT ──────── */
+.test-out{background:var(--ink);color:#abb2bf;border-radius:8px;padding:14px 18px;margin:12px 0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;position:relative}
+.test-out::before{content:'▶ Output';position:absolute;top:-10px;left:12px;background:var(--green);color:white;padding:2px 10px;border-radius:4px;font-size:10px;letter-spacing:2px;font-weight:700}
+
+/* ──────── TABLE ──────── */
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13.5px}
+thead th{background:var(--ink);color:white;padding:10px 14px;text-align:left;font-family:'Syne',sans-serif;font-weight:700;font-size:13px}
+tbody td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+tbody tr:nth-child(even) td{background:var(--warm)}
+.badge{font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 8px;border-radius:20px}
+.bg-green{background:var(--green-light);color:var(--green);border:1px solid var(--green-border)}
+.bg-amber{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border)}
+.bg-red{background:var(--red-light);color:var(--red);border:1px solid var(--red-border)}
+.bg-blue{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-border)}
+
+/* ──────── TEASER ──────── */
+.teaser{background:var(--ink);color:white;border-radius:14px;padding:32px 36px;margin:44px 0 0;position:relative;overflow:hidden}
+.teaser::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(96,32,176,.3) 0%,transparent 70%);border-radius:50%;animation:rotate 20s linear infinite}
+@keyframes rotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.t-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:#c678dd;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
+.teaser h3{font-family:'Clash Display',sans-serif;font-size:24px;font-weight:700;color:white;margin:0 0 12px}
+.teaser p{color:rgba(255,255,255,.6);font-size:15px}
+.cliff{color:#c678dd;font-style:italic;font-size:15px;margin-top:14px;border-top:1px solid rgba(255,255,255,.1);padding-top:14px}
+
+/* ──────── NAV BUTTONS ──────── */
+.ch-nav{display:flex;gap:10px;margin-top:44px;padding-top:28px;border-top:1px solid var(--border)}
+.ch-btn{flex:1;padding:12px 18px;border-radius:8px;border:1.5px solid var(--border);background:none;cursor:pointer;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;transition:all .2s;text-align:left;color:var(--ink)}
+.ch-btn.primary{background:var(--ink);color:white;border-color:var(--ink);text-align:right}
+.ch-btn:hover:not(.primary){background:var(--warm)}
+.ch-btn.primary:hover{background:var(--green);border-color:var(--green)}
+.ch-btn small{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:400;color:var(--muted);margin-bottom:3px}
+.ch-btn.primary small{color:rgba(255,255,255,.5)}
+
+/* ──────── QUIZ ──────── */
+.quiz-section{background:var(--warm);border:2px solid var(--border);border-radius:14px;padding:28px 32px;margin:36px 0}
+.quiz-q{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin:20px 0 12px}
+.q-opts{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
+.q-opt{background:white;border:1.5px solid var(--border);border-radius:7px;padding:10px 14px;cursor:pointer;font-size:14px;text-align:left;font-family:'JetBrains Mono',monospace;transition:all .2s;width:100%;color:var(--ink)}
+.q-opt:hover{border-color:var(--blue);background:var(--blue-light)}
+.q-opt.correct{background:var(--green-light);border-color:var(--green);color:#0a4a25}
+.q-opt.wrong{background:var(--red-light);border-color:var(--red);color:#7a1010}
+.q-fb{font-size:13px;padding:10px 14px;border-radius:6px;display:none;font-family:'Syne',sans-serif;line-height:1.5;margin-top:4px}
+.q-fb.show{display:block}
+.q-fb.ok{background:var(--green-light);color:#0a4a25;border:1px solid var(--green-border)}
+.q-fb.no{background:var(--red-light);color:#7a1010;border:1px solid var(--red-border)}
+
+code{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--warm);border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--red)}
+.divider{text-align:center;margin:36px 0;color:var(--muted);font-size:20px;letter-spacing:4px}
+ul,ol{padding-left:22px;line-height:1.9;font-size:15px;margin-bottom:14px}
+li{margin-bottom:3px}
+strong{font-family:'Syne',sans-serif}
+
+@media(max-width:640px){
+  .tool-types,.compare,.anatomy-grid,.hero-flow{grid-template-columns:1fr;flex-direction:column}
+  .ch-title{font-size:30px}
+  .chapter{padding:44px 18px 80px}
+  .flow-arrow{transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+
+<div class="prog-bar"><div class="prog-fill" id="pf"></div></div>
+
+<nav class="topnav">
+  <span class="nav-session">Session 8</span>
+  <button class="nav-ch active" onclick="goTo(0)">Ch.1 Vision</button>
+  <button class="nav-ch" onclick="goTo(1)">Ch.2 Bot is Lying</button>
+  <button class="nav-ch" onclick="goTo(2)">Ch.3 Tools 101</button>
+  <button class="nav-ch" onclick="goTo(3)">Ch.4 Tool Card</button>
+  <button class="nav-ch" onclick="goTo(4)">Ch.5 Lifecycle</button>
+  <button class="nav-ch" onclick="goTo(5)">Ch.6 Build Tool #1</button>
+  <button class="nav-ch" onclick="goTo(6)">Ch.7 Sequential</button>
+  <button class="nav-ch" onclick="goTo(7)">Ch.8 Parallel</button>
+  <button class="nav-ch" onclick="goTo(8)">Ch.9 Errors</button>
+  <button class="nav-ch" onclick="goTo(9)">Ch.10 Full Bot</button>
+  <button class="nav-ch" onclick="goTo(10)">🧠 Quiz</button>
+  <span class="nav-right">RByte.ai</span>
+</nav>
+
+<div class="main">
+
+<!-- ══════════════════ CH 0 — VISION ══════════════════ -->
+<div class="chapter active" id="ch0">
+  <div class="ch-eyebrow">Session 08 — Chapter 1 of 10</div>
+  <h1 class="ch-title">By end of today,<br>you'll build <span class="hl-green">this</span>.</h1>
+  <p class="ch-sub">A Bajaj Finance helpdesk bot that talks to customers, fetches real loan data from a live database, calculates prepayment penalties, and processes refund requests — all automatically.</p>
+
+  <div class="hero-viz">
+    <div class="hero-flow">
+      <div class="flow-node">
+        <span class="fn-icon">👤</span>
+        <div class="fn-label">Customer</div>
+        <div class="fn-title">"My EMI?"</div>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node">
+        <span class="fn-icon">🤖</span>
+        <div class="fn-label">LangChain Bot</div>
+        <div class="fn-title">Decides + Calls</div>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node">
+        <span class="fn-icon">🔧</span>
+        <div class="fn-label">Tool</div>
+        <div class="fn-title">get_loan_status</div>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node">
+        <span class="fn-icon">💾</span>
+        <div class="fn-label">Database</div>
+        <div class="fn-title">Real JSON data</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>What Your Bot Will Actually Do</h2>
+
+  <div class="chat-demo">
+    <div class="chat-top"><div style="width:8px;height:8px;border-radius:50%;background:#ff5f57"></div><div style="width:8px;height:8px;border-radius:50%;background:#febc2e"></div><div style="width:8px;height:8px;border-radius:50%;background:#28c840"></div><span style="margin-left:8px;">🏦 Bajaj Finance Helpdesk — End of Session 8</span></div>
+    <div class="chat-inner">
+      <div class="cmsg user"><div class="cavatar">U</div><div class="cbubble">My loan is BFL2024001. What's my current EMI and how many are left?</div></div>
+      <div class="cmsg tool"><div class="cavatar">🔧</div><div class="cbubble">→ calling get_loan_status(loan_id="BFL2024001")</div></div>
+      <div class="cmsg bot"><div class="cavatar">AI</div><div class="creal">Your EMI is ₹8,450 per month. You have 22 EMIs remaining out of 72. Loan closes Feb 2026.</div></div>
+      <div class="cmsg user"><div class="cavatar">U</div><div class="cbubble">If I prepay ₹50,000 next month, what will be the penalty?</div></div>
+      <div class="cmsg tool"><div class="cavatar">🔧</div><div class="cbubble">→ calling calculate_prepayment_penalty(loan_id="BFL2024001", amount=50000)</div></div>
+      <div class="cmsg bot"><div class="cavatar">AI</div><div class="creal">Prepayment penalty: ₹1,000 (2% of ₹50,000). You'll save ₹12,500 in future interest. Net benefit: ₹11,500.</div></div>
+    </div>
+  </div>
+
+  <div class="win-box">
+    <div class="win-label">What Changed from Session 7?</div>
+    <p>In Session 7, your bot <strong>talked well but made up numbers</strong>. In Session 8, it <strong>fetches real data</strong> and <strong>performs real calculations</strong>. That's the difference between a demo and a production system.</p>
+  </div>
+
+  <h2>The 10-Chapter Journey</h2>
+  <table>
+    <thead><tr><th>#</th><th>What You Learn</th><th>What You Build</th></tr></thead>
+    <tbody>
+      <tr><td>2</td><td>Why your S7 bot is lying</td><td>Hallucination demo</td></tr>
+      <tr><td>3</td><td>Tools 101 — 3 types</td><td>Mental model</td></tr>
+      <tr><td>4</td><td>Tool Card anatomy</td><td>Schema design</td></tr>
+      <tr><td>5</td><td>Function calling lifecycle</td><td>Flow understanding</td></tr>
+      <tr><td>6</td><td>LangChain <code>@tool</code> decorator</td><td>Your 1st tool</td></tr>
+      <tr><td>7</td><td>Sequential chaining</td><td>2 tools working together</td></tr>
+      <tr><td>8</td><td>Parallel / async calls</td><td>3 tools at once</td></tr>
+      <tr><td>9</td><td>Error handling strategies</td><td>Production-grade bot</td></tr>
+      <tr><td>10</td><td>Combine S7 + S8</td><td>The complete helpdesk</td></tr>
+    </tbody>
+  </table>
+
+  <div class="recall">
+    <p>Session 7 gave your bot <strong>memory</strong> — it remembers conversations. But it had <strong>no data</strong> — it made up EMI numbers, guessed loan balances, invented prepayment penalties. Today we fix the data problem. By Chapter 10, your bot has memory AND real data AND takes real actions.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn primary" onclick="goTo(1)"><small>Next →</small>The Bot is Lying</button>
+  </div>
+</div>
+
+<!-- ══════════════════ CH 1 — PROBLEM ══════════════════ -->
+<div class="chapter" id="ch1">
+  <div class="ch-eyebrow">Session 08 — Chapter 2 of 10</div>
+  <h1 class="ch-title">Your S7 bot is<br><span class="hl-red">lying to you.</span></h1>
+  <p class="ch-sub">Let's run the S7 Bajaj Finance bot one more time. Ask it about your EMI. The answer will sound confident. It will also be completely made up. Let's see why.</p>
+
+  <h2>The Demo — Run Your S7 Bot</h2>
+
+  <div class="chat-demo">
+    <div class="chat-top"><div style="width:8px;height:8px;border-radius:50%;background:#ff5f57"></div><div style="width:8px;height:8px;border-radius:50%;background:#febc2e"></div><div style="width:8px;height:8px;border-radius:50%;background:#28c840"></div><span style="margin-left:8px;">🏦 Bajaj Bot — End of Session 7 (looks fine... is it?)</span></div>
+    <div class="chat-inner">
+      <div class="cmsg user"><div class="cavatar">U</div><div class="cbubble">My loan is BFL2024001. What's my current EMI?</div></div>
+      <div class="cmsg bot"><div class="cavatar">AI</div><div class="cfake">Your EMI for loan BFL2024001 is ₹8,450 per month, due on the 5th.</div></div>
+      <div class="cmsg user"><div class="cavatar">U</div><div class="cbubble">Are you sure? Where are you getting this from?</div></div>
+      <div class="cmsg bot"><div class="cavatar">AI</div><div class="cfake">Yes, based on standard personal loan calculations...</div></div>
+    </div>
+  </div>
+
+  <div class="pain-box">
+    <div class="pain-label">Reality Check</div>
+    <p>The bot <strong>doesn't know</strong> loan BFL2024001. It has never seen it. Your database is not connected. The LLM is just predicting <em>plausible-sounding numbers</em> based on patterns in its training data. ₹8,450? Made up. 22 EMIs remaining? Made up. This is called <strong>hallucination</strong>.</p>
+  </div>
+
+  <h2>Why This Happens — Three Root Causes</h2>
+
+  <div class="tool-types">
+    <div class="tool-type data">
+      <div class="tt-icon">📅</div>
+      <div class="tt-label">Cause 1</div>
+      <h3>Knowledge Cutoff</h3>
+      <p>gpt-4o-mini was trained on data up to a certain date. It has never seen your Bajaj Finance database. Can't access customer data it was never trained on.</p>
+    </div>
+    <div class="tool-type comp">
+      <div class="tt-icon">🧮</div>
+      <div class="tt-label">Cause 2</div>
+      <h3>Can't Calculate</h3>
+      <p>LLMs don't do math — they predict the <em>next likely word</em>. Ask it 2+2=? It predicts "4" because that's what it saw during training. Not calculated — predicted.</p>
+    </div>
+    <div class="tool-type action">
+      <div class="tt-icon">🚫</div>
+      <div class="tt-label">Cause 3</div>
+      <h3>Can't Take Action</h3>
+      <p>LLMs only generate text. They can't call your refund API, update your database, or send an SMS. They're a brain without hands.</p>
+    </div>
+  </div>
+
+  <div class="think-box">
+    <div class="think-label">The Metaphor That Fixes Everything</div>
+    <p>An LLM is like a <strong>brilliant student locked in a library with books from 2024</strong>.</p>
+    <ul>
+      <li>Ask about history → confident, correct answers (it's in the books)</li>
+      <li>Ask about today's stock price → confident, <em>made-up</em> answers (not in the books)</li>
+      <li>Ask it to buy something → can't (no phone, no internet, no hands)</li>
+    </ul>
+    <p style="margin-bottom:0;">What does this student need? <strong>Tools.</strong> A phone. Internet access. A calculator. A way to fetch live data. That's what we're building today.</p>
+  </div>
+
+  <h2>What We Need Instead</h2>
+  <div class="compare">
+    <div class="cmp bad">
+      <div class="cmp-label">❌ Current Bot (S7)</div>
+      <p>"Your EMI is ₹8,450" ← invented</p>
+      <p style="margin-top:8px;color:var(--muted);font-size:12.5px">No database connection. Made-up numbers that happen to sound plausible.</p>
+    </div>
+    <div class="cmp good">
+      <div class="cmp-label">✅ Tool-Powered Bot (S8)</div>
+      <p>"Your EMI is ₹8,450" ← fetched from DB</p>
+      <p style="margin-top:8px;color:var(--muted);font-size:12.5px">Real API call to real database. The number in the answer = the number in the database.</p>
+    </div>
+  </div>
+
+  <div class="win-box">
+    <div class="win-label">The Fix</div>
+    <p><strong>Tools</strong> — external functions the LLM can call to fetch live data, perform calculations, and take real actions. Today we give our Bajaj bot 4 tools: loan status, EMI schedule, prepayment calculator, and refund processor. By the end, it won't lie anymore.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(0)"><small>←</small>The Vision</button>
+    <button class="ch-btn primary" onclick="goTo(2)"><small>Next →</small>Tools 101</button>
+  </div>
+</div>
+
+<!-- ══════════════════ CH 2 — TOOLS 101 ══════════════════ -->
+<div class="chapter" id="ch2">
+  <div class="ch-eyebrow">Session 08 — Chapter 3 of 10</div>
+  <h1 class="ch-title">Tools = giving LLM<br><span class="hl-blue">hands and eyes.</span></h1>
+  <p class="ch-sub">A tool is any external function or API the LLM can call to do something it can't do on its own. Learn the 3 types, then we'll build them.</p>
+
+  <p>Think of it this way — <strong>the LLM is the brain, tools are the body parts</strong>. Eyes to see real data. Hands to do calculations. Legs to take actions in the real world.</p>
+
+  <h2>The 3 Types of Tools</h2>
+
+  <div class="tool-types">
+    <div class="tool-type data">
+      <div class="tt-icon">👀</div>
+      <div class="tt-label">Type 1 — Eyes</div>
+      <h3>Data Retrieval</h3>
+      <p>Fetches real-time or external data the LLM doesn't have. Doesn't change anything — just reads.</p>
+      <div class="tt-eg">get_loan_status()<br>get_weather()<br>search_web()</div>
+    </div>
+    <div class="tool-type comp">
+      <div class="tt-icon">🧮</div>
+      <div class="tt-label">Type 2 — Brain (for math)</div>
+      <h3>Computation</h3>
+      <p>Performs accurate math. LLMs predict numbers — they don't calculate. A calculation tool runs real Python code.</p>
+      <div class="tt-eg">calculate_penalty()<br>convert_currency()<br>compound_interest()</div>
+    </div>
+    <div class="tool-type action">
+      <div class="tt-icon">✋</div>
+      <div class="tt-label">Type 3 — Hands</div>
+      <h3>Action</h3>
+      <p>Takes action in the real world. Books a flight. Sends an email. Processes a refund. Changes state in some external system.</p>
+      <div class="tt-eg">process_refund()<br>send_sms()<br>book_appointment()</div>
+    </div>
+  </div>
+
+  <h2>Our Bajaj Finance Toolkit</h2>
+  <p>Here are the 4 tools we'll build today — one of each type (plus a bonus):</p>
+
+  <table>
+    <thead><tr><th>Tool</th><th>Type</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>get_loan_status</code></td><td><span class="badge bg-blue">Data Retrieval</span></td><td>Fetch loan details, EMI, remaining tenure from DB</td></tr>
+      <tr><td><code>get_emi_schedule</code></td><td><span class="badge bg-blue">Data Retrieval</span></td><td>Get full amortization schedule for a loan</td></tr>
+      <tr><td><code>calculate_prepayment_penalty</code></td><td><span class="badge bg-amber">Computation</span></td><td>Calculate exact penalty + interest savings</td></tr>
+      <tr><td><code>process_refund_request</code></td><td><span class="badge bg-red">Action</span></td><td>Log a refund ticket in the system</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note-box">
+    <div class="note-label">Key Insight About LLMs</div>
+    <p>Here's something surprising — <strong>the LLM never actually runs any of these tools</strong>. It only <em>suggests</em> which tool to call and what arguments to pass. Your code is what actually runs the tool. We'll see exactly why in Chapter 5 (Lifecycle).</p>
+  </div>
+
+  <h2>Why This Analogy Matters</h2>
+  <div class="story-box">
+    <div class="story-label">The Librarian vs The Receptionist</div>
+    <p>Imagine two assistants at Bajaj Finance:</p>
+    <ul>
+      <li><strong>Without tools:</strong> Like a librarian in a closed library. Very knowledgeable about old topics. Can explain loan theory beautifully. But ask about <em>your</em> loan and they have no idea.</li>
+      <li><strong>With tools:</strong> Like a receptionist with computer access. Same brain — but now they can query the database, run calculations, and submit refund requests. Suddenly they can actually help you.</li>
+    </ul>
+    <p style="margin-bottom:0;">Tools don't make the LLM <em>smarter</em>. They give it <strong>access</strong>.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(1)"><small>←</small>Bot is Lying</button>
+    <button class="ch-btn primary" onclick="goTo(3)"><small>Next →</small>Tool Card Anatomy</button>
+  </div>
+</div>
+
+<!-- ══════════════════ CH 3 — TOOL CARD ══════════════════ -->
+<div class="chapter" id="ch3">
+  <div class="ch-eyebrow">Session 08 — Chapter 4 of 10</div>
+  <h1 class="ch-title">The <span class="hl-green">Tool Card.</span></h1>
+  <p class="ch-sub">Before writing any code, understand what a "Tool" actually looks like to the LLM. It's not magic — it's a structured description with 4 specific parts. Get these right and everything works.</p>
+
+  <p>When you give a tool to the LLM, what you're actually giving it is a <strong>Tool Card</strong> — a structured description. The LLM reads this card to decide whether to use the tool. Four fields. That's it.</p>
+
+  <div class="anatomy">
+    <div class="anatomy-title">📋 Tool Card Anatomy</div>
+    <div class="anatomy-grid">
+      <div class="anatomy-field f1">
+        <div class="af-label">① NAME</div>
+        <div class="af-desc">Unique identifier. Snake_case. Descriptive. <code style="font-size:11px">get_loan_status</code></div>
+      </div>
+      <div class="anatomy-field f2">
+        <div class="af-label">② DESCRIPTION</div>
+        <div class="af-desc">The most important field. Tells LLM <em>when</em> to use this tool. Be clear and specific.</div>
+      </div>
+      <div class="anatomy-field f3">
+        <div class="af-label">③ PARAMETERS</div>
+        <div class="af-desc">Schema of inputs needed — name, type, required/optional. Defined via Pydantic in LangChain.</div>
+      </div>
+      <div class="anatomy-field f4">
+        <div class="af-label">④ OUTPUT (implicit)</div>
+        <div class="af-desc">What the tool returns. LangChain infers this from your function's return value.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Building a Tool Card — Bajaj Finance Example</h2>
+  <p>Let's design the <code>get_loan_status</code> tool card. This is the mental model — in the next chapter we'll write actual code.</p>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">tool_card_conceptual.py</span><span class="code-tag tag-note">CONCEPT</span></div>
+    <div class="code-body"><pre><span style="color:var(--cc)"># ① NAME — what the LLM will call</span>
+name = <span style="color:var(--cg)">"get_loan_status"</span>
+
+<span style="color:var(--cc)"># ② DESCRIPTION — when and why to use it (the LLM's decision-maker)</span>
+description = <span style="color:var(--cg)">"""Fetches the current status of a Bajaj Finance loan including
+EMI amount, remaining tenure, total outstanding, and next due date.
+Use this when the customer asks about their loan details, EMI,
+balance, or tenure."""</span>
+
+<span style="color:var(--cc)"># ③ PARAMETERS — what inputs it needs</span>
+parameters = {
+    <span style="color:var(--cg)">"loan_id"</span>: {
+        <span style="color:var(--cg)">"type"</span>: <span style="color:var(--cg)">"string"</span>,
+        <span style="color:var(--cg)">"description"</span>: <span style="color:var(--cg)">"The loan account number, format BFL followed by digits (e.g. BFL2024001)"</span>,
+        <span style="color:var(--cg)">"required"</span>: True
+    }
+}
+
+<span style="color:var(--cc)"># ④ OUTPUT — what it returns (structured data)</span>
+output_example = {
+    <span style="color:var(--cg)">"customer_name"</span>: <span style="color:var(--cg)">"Rahul Sharma"</span>,
+    <span style="color:var(--cg)">"loan_type"</span>: <span style="color:var(--cg)">"Personal Loan"</span>,
+    <span style="color:var(--cg)">"emi"</span>: <span style="color:var(--co)">8450</span>,
+    <span style="color:var(--cg)">"remaining_months"</span>: <span style="color:var(--co)">22</span>,
+    <span style="color:var(--cg)">"outstanding"</span>: <span style="color:var(--co)">185900</span>,
+    <span style="color:var(--cg)">"next_due"</span>: <span style="color:var(--cg)">"2026-05-05"</span>
+}</pre></div>
+  </div>
+
+  <h2>The Critical Insight — Tool Card ≠ Tool</h2>
+  <div class="think-box">
+    <div class="think-label">The Menu vs The Kitchen</div>
+    <p>When you walk into a restaurant, you don't see the kitchen. You see the <strong>menu</strong>. The menu tells you:</p>
+    <ul>
+      <li>What dishes are available (name)</li>
+      <li>What's in each dish (description)</li>
+      <li>What you need to specify (parameters — "how spicy?", "extra cheese?")</li>
+    </ul>
+    <p>The actual cooking happens in the kitchen — which you never see. The LLM is the customer. The <strong>Tool Card is the menu</strong>. Your Python function is the <strong>kitchen</strong>. The LLM reads the menu to order — your code runs the kitchen to cook.</p>
+  </div>
+
+  <h2>Why Description Matters Most</h2>
+  <div class="compare">
+    <div class="cmp bad">
+      <div class="cmp-label">❌ Bad Description</div>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:12px">"A tool that gets loan data."</p>
+      <p style="margin-top:8px;color:var(--muted);font-size:12.5px">LLM doesn't know when to use it. Misses obvious cases like "What's my EMI?"</p>
+    </div>
+    <div class="cmp good">
+      <div class="cmp-label">✅ Good Description</div>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:12px">"Fetches EMI amount, remaining tenure, outstanding balance for a Bajaj loan. Use when customer asks about loan details, EMI, balance, or tenure."</p>
+      <p style="margin-top:8px;color:var(--muted);font-size:12.5px">LLM knows exactly when this matches customer intent.</p>
+    </div>
+  </div>
+
+  <div class="warning-box">
+    <div class="af-label" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:700">Golden Rule</div>
+    <p>The LLM <strong>decides which tool to use by reading descriptions</strong>. If your description is weak, the LLM won't pick your tool even when it's the perfect match. Spend more time writing the description than any other part.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(2)"><small>←</small>Tools 101</button>
+    <button class="ch-btn primary" onclick="goTo(4)"><small>Next →</small>Lifecycle</button>
+  </div>
+</div>
+
+<!-- ══════════════════ CH 4 — LIFECYCLE ══════════════════ -->
+<div class="chapter" id="ch4">
+  <div class="ch-eyebrow">Session 08 — Chapter 5 of 10</div>
+  <h1 class="ch-title">The <span class="hl-purple">5-step lifecycle.</span></h1>
+  <p class="ch-sub">Here's what actually happens from the moment a customer says "What's my EMI?" to the moment they see the answer. Understanding this flow is the difference between "it works" and "I know why it works".</p>
+
+  <div class="story-box">
+    <div class="story-label">Follow This Example Throughout</div>
+    <p>Customer query: <em>"My loan is BFL2024001. What's my current EMI?"</em></p>
+    <p style="margin-bottom:0;">We'll trace this query through all 5 steps. By the end, you'll know exactly what the LLM does, what your code does, and where the responsibility split is.</p>
+  </div>
+
+  <div class="lifecycle">
+    <div class="lc-step">
+      <div class="lc-num">1</div>
+      <div class="lc-content">
+        <h4>LLM detects intent + finds information gap</h4>
+        <p>The LLM reads the customer's message. Its internal reasoning: <em>"They want EMI info for a specific loan. I don't have that data in my training. But I have a tool — <code>get_loan_status</code> — that does exactly this."</em></p>
+        <div class="lc-code"><span style="color:#c678dd">Internal reasoning (invisible to you):</span><br>Intent: retrieve loan data<br>Gap: no database access in training<br>Matching tool: get_loan_status ✓</div>
+      </div>
+    </div>
+    <div class="lc-step">
+      <div class="lc-num">2</div>
+      <div class="lc-content">
+        <h4>LLM generates a structured tool call (JSON)</h4>
+        <p>The LLM doesn't execute code. It <strong>generates a structured request</strong> — a JSON object saying "call this tool with these arguments". That's all it does.</p>
+        <div class="lc-code">{<br>&nbsp;&nbsp;<span style="color:#a8d9bc">"tool"</span>: <span style="color:#e5c07b">"get_loan_status"</span>,<br>&nbsp;&nbsp;<span style="color:#a8d9bc">"args"</span>: { <span style="color:#a8d9bc">"loan_id"</span>: <span style="color:#e5c07b">"BFL2024001"</span> }<br>}</div>
+      </div>
+    </div>
+    <div class="lc-step">
+      <div class="lc-num">3</div>
+      <div class="lc-content">
+        <h4>Your backend executes the function</h4>
+        <p>Your code reads the tool call, finds the Python function named <code>get_loan_status</code>, extracts the arguments, and calls it manually. The function runs — queries the database, returns real data.</p>
+        <div class="lc-code"><span style="color:#c678dd">Your code runs:</span><br>result = get_loan_status(loan_id=<span style="color:#e5c07b">"BFL2024001"</span>)<br><span style="color:#5c6370"># → queries bajaj_db.json</span><br><span style="color:#5c6370"># → returns real loan data</span></div>
+      </div>
+    </div>
+    <div class="lc-step">
+      <div class="lc-num">4</div>
+      <div class="lc-content">
+        <h4>Tool result sent back to LLM</h4>
+        <p>LangChain takes the function's return value and sends it back to the LLM as a <strong>tool message</strong>. The LLM now has real data to work with.</p>
+        <div class="lc-code">{<br>&nbsp;&nbsp;<span style="color:#a8d9bc">"emi"</span>: <span style="color:#d19a66">8450</span>,<br>&nbsp;&nbsp;<span style="color:#a8d9bc">"remaining_months"</span>: <span style="color:#d19a66">22</span>,<br>&nbsp;&nbsp;<span style="color:#a8d9bc">"outstanding"</span>: <span style="color:#d19a66">185900</span><br>}</div>
+      </div>
+    </div>
+    <div class="lc-step">
+      <div class="lc-num">5</div>
+      <div class="lc-content">
+        <h4>LLM synthesizes a human response</h4>
+        <p>The LLM converts the structured data into natural language for the customer. This is where personality, tone, and formatting come in.</p>
+        <div class="lc-code"><span style="color:#58a862">Final reply to customer:</span><br><span style="color:#abb2bf">"Your EMI for BFL2024001 is ₹8,450 per month. You have 22 EMIs remaining with an outstanding balance of ₹1,85,900."</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>The Critical Division of Labor</h2>
+
+  <div class="compare">
+    <div class="cmp" style="background:var(--purple-light);border-color:var(--purple-border)">
+      <div class="cmp-label" style="color:var(--purple)">🧠 LLM DOES</div>
+      <ul style="margin:0;padding-left:18px">
+        <li>Understand intent</li>
+        <li>Decide which tool to use</li>
+        <li>Format the arguments</li>
+        <li>Generate final human response</li>
+      </ul>
+    </div>
+    <div class="cmp" style="background:var(--blue-light);border-color:var(--blue-border)">
+      <div class="cmp-label" style="color:var(--blue)">💻 YOUR CODE DOES</div>
+      <ul style="margin:0;padding-left:18px">
+        <li>Run the actual function</li>
+        <li>Query the database</li>
+        <li>Call external APIs</li>
+        <li>Return structured data to LLM</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="think-box">
+    <div class="think-label">Why This Split?</div>
+    <p><strong>Security + Control.</strong> If LLMs could execute code directly, it would be terrifying — a hallucinating AI running arbitrary Python on your server? No thanks. The LLM <em>suggests</em>, your code <em>validates and executes</em>. You stay in control of every real-world action.</p>
+  </div>
+
+  <div class="note-box">
+    <div class="note-label">In This Session, You'll Do Every Step Manually</div>
+    <p>From Chapter 6 onwards, you'll write code for <strong>every one of these 5 steps yourself</strong>. LLM generates tool call → you parse it → you execute the function → you send result back → LLM synthesizes. No hidden magic. This way you understand exactly what's happening under the hood.</p>
+    <p style="margin-bottom:0;">In Session 9, we'll introduce a helper that automates this loop — but only after you truly understand the manual flow.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(3)"><small>←</small>Tool Card</button>
+    <button class="ch-btn primary" onclick="goTo(5)"><small>Next →</small>Build Tool #1</button>
+  </div>
+</div>
+
+<!-- ══════════════════ CH 5 — BUILD TOOL 1 ══════════════════ -->
+<div class="chapter" id="ch5">
+  <div class="ch-eyebrow">Session 08 — Chapter 6 of 10</div>
+  <h1 class="ch-title">Build your<br><span class="hl-green">first tool.</span></h1>
+  <p class="ch-sub">Enough theory. Let's write code. We'll build get_loan_status step by step. First the mock database, then the tool, then test it, then hook it up to the LLM.</p>
+
+  <h2>Step 1 — Create the Mock Database</h2>
+  <p>In production, this would be a real database or API. For learning, we use a JSON file. Save this as <code>bajaj_db.json</code>:</p>
+
+  <div class="build-step" data-step="STEP 1">
+    <div class="bs-title">📁 bajaj_db.json — our mock Bajaj Finance database</div>
+    <div class="bs-goal">Goal: simulate a real loan management system</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">bajaj_db.json</span></div>
+      <div class="code-body"><pre>{
+  <span style="color:var(--cg)">"loans"</span>: {
+    <span style="color:var(--cg)">"BFL2024001"</span>: {
+      <span style="color:var(--cg)">"customer_name"</span>: <span style="color:var(--cg)">"Rahul Sharma"</span>,
+      <span style="color:var(--cg)">"loan_type"</span>: <span style="color:var(--cg)">"Personal Loan"</span>,
+      <span style="color:var(--cg)">"principal"</span>: <span style="color:var(--co)">500000</span>,
+      <span style="color:var(--cg)">"emi"</span>: <span style="color:var(--co)">8450</span>,
+      <span style="color:var(--cg)">"tenure_months"</span>: <span style="color:var(--co)">72</span>,
+      <span style="color:var(--cg)">"paid_months"</span>: <span style="color:var(--co)">50</span>,
+      <span style="color:var(--cg)">"remaining_months"</span>: <span style="color:var(--co)">22</span>,
+      <span style="color:var(--cg)">"outstanding"</span>: <span style="color:var(--co)">185900</span>,
+      <span style="color:var(--cg)">"interest_rate"</span>: <span style="color:var(--co)">11.5</span>,
+      <span style="color:var(--cg)">"next_due_date"</span>: <span style="color:var(--cg)">"2026-05-05"</span>,
+      <span style="color:var(--cg)">"prepayment_allowed"</span>: <span style="color:var(--cm)">true</span>,
+      <span style="color:var(--cg)">"prepayment_charge_pct"</span>: <span style="color:var(--co)">2.0</span>
+    },
+    <span style="color:var(--cg)">"BFL9988"</span>: {
+      <span style="color:var(--cg)">"customer_name"</span>: <span style="color:var(--cg)">"Priya Mehta"</span>,
+      <span style="color:var(--cg)">"loan_type"</span>: <span style="color:var(--cg)">"Home Loan"</span>,
+      <span style="color:var(--cg)">"principal"</span>: <span style="color:var(--co)">2500000</span>,
+      <span style="color:var(--cg)">"emi"</span>: <span style="color:var(--co)">24500</span>,
+      <span style="color:var(--cg)">"tenure_months"</span>: <span style="color:var(--co)">240</span>,
+      <span style="color:var(--cg)">"paid_months"</span>: <span style="color:var(--co)">36</span>,
+      <span style="color:var(--cg)">"remaining_months"</span>: <span style="color:var(--co)">204</span>,
+      <span style="color:var(--cg)">"outstanding"</span>: <span style="color:var(--co)">2180000</span>,
+      <span style="color:var(--cg)">"interest_rate"</span>: <span style="color:var(--co)">8.75</span>,
+      <span style="color:var(--cg)">"next_due_date"</span>: <span style="color:var(--cg)">"2026-05-10"</span>,
+      <span style="color:var(--cg)">"prepayment_allowed"</span>: <span style="color:var(--cm)">true</span>,
+      <span style="color:var(--cg)">"prepayment_charge_pct"</span>: <span style="color:var(--co)">0.0</span>
+    }
+  }
+}</pre></div>
+    </div>
+  </div>
+
+  <h2>Step 2 — Write the Tool with <code>@tool</code></h2>
+
+  <div class="build-step" data-step="STEP 2">
+    <div class="bs-title">🔧 Create your first LangChain tool</div>
+    <div class="bs-goal">Goal: a function the LLM can call to fetch loan data</div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">bajaj_tools.py</span><span class="code-tag tag-build">BUILD</span></div>
+      <div class="code-body"><pre><span style="color:var(--cb)">from</span> langchain_core.tools <span style="color:var(--cb)">import</span> tool
+<span style="color:var(--cb)">import</span> json
+
+<span style="color:var(--cc)"># Load our mock database once at startup</span>
+<span style="color:var(--cb)">with</span> open(<span style="color:var(--cg)">"bajaj_db.json"</span>) <span style="color:var(--cb)">as</span> f:
+    db = json.load(f)
+
+<span style="color:var(--cc)"># The @tool decorator is LangChain magic
+# It reads the function signature + docstring → builds the Tool Card automatically</span>
+<span style="color:var(--co)">@tool</span>
+<span style="color:var(--cb)">def</span> <span style="color:var(--cb)">get_loan_status</span>(loan_id: str) -> dict:
+    <span style="color:var(--cg)">"""Fetches current loan status from Bajaj Finance database.
+    
+    Returns EMI amount, remaining tenure, outstanding balance,
+    and next due date for the given loan account.
+    
+    Use this when the customer asks about their loan details,
+    EMI, balance, or tenure.
+    
+    Args:
+        loan_id: The loan account number (e.g., 'BFL2024001')
+    """</span>
+    <span style="color:var(--cb)">if</span> loan_id <span style="color:var(--cb)">not in</span> db[<span style="color:var(--cg)">"loans"</span>]:
+        <span style="color:var(--cb)">return</span> {<span style="color:var(--cg)">"error"</span>: <span style="color:var(--cg)">f"Loan {loan_id} not found"</span>}
+    
+    loan = db[<span style="color:var(--cg)">"loans"</span>][loan_id]
+    <span style="color:var(--cb)">return</span> {
+        <span style="color:var(--cg)">"customer_name"</span>: loan[<span style="color:var(--cg)">"customer_name"</span>],
+        <span style="color:var(--cg)">"loan_type"</span>: loan[<span style="color:var(--cg)">"loan_type"</span>],
+        <span style="color:var(--cg)">"emi"</span>: loan[<span style="color:var(--cg)">"emi"</span>],
+        <span style="color:var(--cg)">"remaining_months"</span>: loan[<span style="color:var(--cg)">"remaining_months"</span>],
+        <span style="color:var(--cg)">"outstanding"</span>: loan[<span style="color:var(--cg)">"outstanding"</span>],
+        <span style="color:var(--cg)">"next_due_date"</span>: loan[<span style="color:var(--cg)">"next_due_date"</span>]
+    }</pre></div>
+    </div>
+  </div>
+
+  <div class="think-box">
+    <div class="think-label">What @tool Does Automatically</div>
+    <p>LangChain's <code>@tool</code> decorator reads your function and automatically builds the Tool Card for the LLM:</p>
+    <ul>
+      <li><strong>name</strong> = function name (<code>get_loan_status</code>)</li>
+      <li><strong>description</strong> = docstring (the """...""" text)</li>
+      <li><strong>parameters</strong> = function arguments + type hints (<code>loan_id: str</code>)</li>
+    </ul>
+    <p style="margin-bottom:0;">No separate JSON schema. No manual parsing. Your Python function IS the tool definition. This is why LangChain is so much cleaner than plain Gemini/OpenAI SDKs for learners.</p>
+  </div>
+
+  <h2>Step 3 — Test the Tool (Without LLM Yet)</h2>
+
+  <div class="build-step" data-step="STEP 3">
+    <div class="bs-title">🧪 Test the raw function</div>
+    <div class="bs-goal">Goal: confirm it works before plugging into the LLM</div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">test_tool.py</span></div>
+      <div class="code-body"><pre><span style="color:var(--cb)">from</span> bajaj_tools <span style="color:var(--cb)">import</span> get_loan_status
+
+<span style="color:var(--cc)"># Direct call — bypass LLM for now, just test the function</span>
+result = get_loan_status.invoke({<span style="color:var(--cg)">"loan_id"</span>: <span style="color:var(--cg)">"BFL2024001"</span>})
+<span style="color:var(--cb)">print</span>(result)</pre></div>
+    </div>
+
+    <div class="test-out">{'customer_name': 'Rahul Sharma', 'loan_type': 'Personal Loan', 'emi': 8450, 'remaining_months': 22, 'outstanding': 185900, 'next_due_date': '2026-05-05'}</div>
+  </div>
+
+  <h2>Step 4 — Let the LLM Generate a Tool Call</h2>
+
+  <div class="build-step" data-step="STEP 4">
+    <div class="bs-title">🤖 Bind tool to LLM, see what it generates</div>
+    <div class="bs-goal">Goal: LLM outputs a tool call (but doesn't execute it — remember Ch.5 Step 2)</div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">step4_bind_tools.py</span></div>
+      <div class="code-body"><pre><span style="color:var(--cb)">from</span> langchain_openai <span style="color:var(--cb)">import</span> ChatOpenAI
+<span style="color:var(--cb)">from</span> bajaj_tools <span style="color:var(--cb)">import</span> get_loan_status
+
+llm = ChatOpenAI(model=<span style="color:var(--cg)">"gpt-4o-mini"</span>, temperature=<span style="color:var(--co)">0</span>)
+
+<span style="color:var(--cc)"># Attach our tool to the LLM — LLM now KNOWS this tool exists</span>
+llm_with_tools = llm.bind_tools([get_loan_status])
+
+<span style="color:var(--cc)"># Ask a question — LLM generates a tool call (doesn't execute)</span>
+user_question = <span style="color:var(--cg)">"My loan is BFL2024001. What's my EMI?"</span>
+response = llm_with_tools.invoke(user_question)
+
+<span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">"Tool calls generated by LLM:"</span>)
+<span style="color:var(--cb)">print</span>(response.tool_calls)</pre></div>
+    </div>
+
+    <div class="test-out">Tool calls generated by LLM:
+[{'name': 'get_loan_status', 'args': {'loan_id': 'BFL2024001'}, 'id': 'call_abc123'}]</div>
+  </div>
+
+  <div class="think-box">
+    <div class="think-label">Pause — What Just Happened?</div>
+    <p>The LLM didn't give you a text answer. It gave you a <strong>structured tool call</strong>: "call <code>get_loan_status</code> with <code>loan_id='BFL2024001'</code>". Notice — <strong>no data was fetched yet</strong>. The LLM just said <em>what</em> to do. Now YOU have to do it.</p>
+  </div>
+
+  <h2>Step 5 — Execute the Tool Call Manually</h2>
+
+  <div class="build-step" data-step="STEP 5">
+    <div class="bs-title">⚙️ Read the tool call, run the function</div>
+    <div class="bs-goal">Goal: take LLM's suggestion and actually execute the Python function</div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">step5_execute.py</span></div>
+      <div class="code-body"><pre><span style="color:var(--cc)"># Continue from Step 4 — we have `response.tool_calls`</span>
+
+<span style="color:var(--cc)"># Loop through each tool call the LLM wants</span>
+<span style="color:var(--cb)">for</span> tool_call <span style="color:var(--cb)">in</span> response.tool_calls:
+    tool_name = tool_call[<span style="color:var(--cg)">"name"</span>]
+    tool_args = tool_call[<span style="color:var(--cg)">"args"</span>]
+    
+    <span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"Executing: {tool_name}(**{tool_args})"</span>)
+    
+    <span style="color:var(--cc)"># Run the actual Python function</span>
+    result = get_loan_status.invoke(tool_args)
+    
+    <span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"Result: {result}"</span>)</pre></div>
+    </div>
+
+    <div class="test-out">Executing: get_loan_status(**{'loan_id': 'BFL2024001'})
+Result: {'customer_name': 'Rahul Sharma', 'loan_type': 'Personal Loan', 'emi': 8450, 'remaining_months': 22, 'outstanding': 185900, 'next_due_date': '2026-05-05'}</div>
+  </div>
+
+  <h2>Step 6 — Send Result Back to LLM for Human Reply</h2>
+
+  <div class="build-step" data-step="STEP 6">
+    <div class="bs-title">💬 LLM converts raw data → conversational answer</div>
+    <div class="bs-goal">Goal: complete the 5-step lifecycle from Ch.5</div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">step6_synthesize.py</span></div>
+      <div class="code-body"><pre><span style="color:var(--cb)">from</span> langchain_core.messages <span style="color:var(--cb)">import</span> HumanMessage, ToolMessage
+
+<span style="color:var(--cc)"># Build the conversation: user question → LLM's tool call → tool result</span>
+messages = [
+    HumanMessage(content=user_question),        <span style="color:var(--cc)"># Step 1: user asked</span>
+    response,                                    <span style="color:var(--cc)"># Step 2: LLM's tool call</span>
+    ToolMessage(                                 <span style="color:var(--cc)"># Step 4: tool result</span>
+        content=str(result),
+        tool_call_id=response.tool_calls[<span style="color:var(--co)">0</span>][<span style="color:var(--cg)">"id"</span>]
+    )
+]
+
+<span style="color:var(--cc)"># Ask LLM again — this time it has the data and synthesizes a reply</span>
+final_response = llm_with_tools.invoke(messages)
+<span style="color:var(--cb)">print</span>(final_response.content)</pre></div>
+    </div>
+
+    <div class="test-out"><span style="color:var(--cg)">Your current EMI for loan BFL2024001 is ₹8,450 per month. You have 22 EMIs remaining, with an outstanding balance of ₹1,85,900. Your next EMI is due on 5th May 2026.</span></div>
+  </div>
+
+  <div class="win-box">
+    <div class="win-label">🎉 Your Bot Just Stopped Lying</div>
+    <p>You just ran the full 5-step lifecycle manually:</p>
+    <ol style="margin:8px 0 0 20px">
+      <li>User asks question</li>
+      <li>LLM generates tool call (didn't execute)</li>
+      <li>YOU executed the function</li>
+      <li>YOU sent result back as ToolMessage</li>
+      <li>LLM synthesized a clean human response</li>
+    </ol>
+    <p style="margin-top:10px;margin-bottom:0">The EMI in the reply (₹8,450) matches the DB (₹8,450). <strong>No hallucination. This is function calling.</strong></p>
+  </div>
+
+  <div class="note-box">
+    <div class="note-label">Why Manual? Why Not Automate?</div>
+    <p>You could use a helper that automates all this. But today the goal is <strong>understanding</strong>, not shortcuts. When you manually write each step, you see exactly what the LLM does vs what your code does. In Session 9, once you understand this flow cold, we'll automate it.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(4)"><small>←</small>Lifecycle</button>
+    <button class="ch-btn primary" onclick="goTo(6)"><small>Next →</small>Sequential Chaining</button>
+  </div>
+</div>
+
+<!-- ══════════════════ CH 6 — SEQUENTIAL ══════════════════ -->
+<div class="chapter" id="ch6">
+  <div class="ch-eyebrow">Session 08 — Chapter 7 of 10</div>
+  <h1 class="ch-title">Two tools,<br><span class="hl-blue">one after another.</span></h1>
+  <p class="ch-sub">Some queries need multiple tools where the second depends on the first. "How much will prepayment save me?" needs loan status FIRST, then the calculation. Let's build it.</p>
+
+  <h2>The Real Query</h2>
+  <div class="chat-demo">
+    <div class="chat-top"><div style="width:8px;height:8px;border-radius:50%;background:#ff5f57"></div><div style="width:8px;height:8px;border-radius:50%;background:#febc2e"></div><div style="width:8px;height:8px;border-radius:50%;background:#28c840"></div><span style="margin-left:8px;">Sequential tool calling in action</span></div>
+    <div class="chat-inner">
+      <div class="cmsg user"><div class="cavatar">U</div><div class="cbubble">For loan BFL2024001, if I prepay ₹50,000 next month, what's the penalty and how much interest will I save?</div></div>
+      <div class="clabel">Step 1 — Get loan info</div>
+      <div class="cmsg tool"><div class="cavatar">🔧</div><div class="cbubble">→ get_loan_status(loan_id="BFL2024001")<br>← { outstanding: 185900, interest_rate: 11.5, prepayment_charge_pct: 2.0 }</div></div>
+      <div class="clabel">Step 2 — Use that data for calculation</div>
+      <div class="cmsg tool"><div class="cavatar">🔧</div><div class="cbubble">→ calculate_prepayment_impact(outstanding=185900, prepay=50000, rate=11.5, charge_pct=2.0)<br>← { penalty: 1000, interest_saved: 12500, net_benefit: 11500 }</div></div>
+      <div class="cmsg bot"><div class="cavatar">AI</div><div class="creal">For ₹50,000 prepayment: penalty is ₹1,000 (2%). You'll save ₹12,500 in future interest. Net benefit: ₹11,500.</div></div>
+    </div>
+  </div>
+
+  <h2>Why This is "Sequential"</h2>
+  <div class="think-box">
+    <div class="think-label">The Dependency Chain</div>
+    <p>Tool 2 <strong>needs the output of Tool 1</strong> — specifically <code>outstanding</code>, <code>interest_rate</code>, and <code>prepayment_charge_pct</code>. You can't call them at the same time. The order matters:</p>
+    <ul>
+      <li>Call <code>get_loan_status</code> first → wait for result</li>
+      <li>Pass result's data to <code>calculate_prepayment_impact</code></li>
+    </ul>
+    <p style="margin-bottom:0;">LangChain's agent handles this automatically — it sees that Tool 2 needs data from Tool 1 and calls them in order.</p>
+  </div>
+
+  <h2>Build the Calculation Tool</h2>
+
+  <div class="build-step" data-step="STEP 1">
+    <div class="bs-title">🧮 Add calculate_prepayment_impact to bajaj_tools.py</div>
+    <div class="bs-goal">Goal: a pure computation tool (no database access — just math)</div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">bajaj_tools.py (add this)</span><span class="code-tag tag-build">BUILD</span></div>
+      <div class="code-body"><pre><span style="color:var(--co)">@tool</span>
+<span style="color:var(--cb)">def</span> <span style="color:var(--cb)">calculate_prepayment_impact</span>(
+    outstanding: float,
+    prepay_amount: float,
+    interest_rate: float,
+    charge_pct: float
+) -> dict:
+    <span style="color:var(--cg)">"""Calculates prepayment penalty and interest savings for a loan.
+    
+    Use when customer wants to know the financial impact of making
+    a partial prepayment on their loan.
+    
+    Args:
+        outstanding: Current outstanding principal (₹)
+        prepay_amount: Amount customer wants to prepay (₹)
+        interest_rate: Annual interest rate (%)
+        charge_pct: Prepayment charge percentage (%)
+    """</span>
+    <span style="color:var(--cc)"># Penalty = percentage of prepay amount</span>
+    penalty = (prepay_amount * charge_pct) / <span style="color:var(--co)">100</span>
+    
+    <span style="color:var(--cc)"># Simplified interest saving = prepay × rate × avg remaining tenure (2 yrs)</span>
+    interest_saved = (prepay_amount * interest_rate * <span style="color:var(--co)">2</span>) / <span style="color:var(--co)">100</span>
+    
+    net_benefit = interest_saved - penalty
+    
+    <span style="color:var(--cb)">return</span> {
+        <span style="color:var(--cg)">"penalty"</span>: round(penalty, <span style="color:var(--co)">2</span>),
+        <span style="color:var(--cg)">"interest_saved"</span>: round(interest_saved, <span style="color:var(--co)">2</span>),
+        <span style="color:var(--cg)">"net_benefit"</span>: round(net_benefit, <span style="color:var(--co)">2</span>),
+        <span style="color:var(--cg)">"recommendation"</span>: <span style="color:var(--cg)">"Prepayment beneficial"</span> <span style="color:var(--cb)">if</span> net_benefit > <span style="color:var(--co)">0</span> <span style="color:var(--cb)">else</span> <span style="color:var(--cg)">"Not worth it"</span>
+    }</pre></div>
+    </div>
+  </div>
+
+  <h2>Manually Chain Two Tools</h2>
+
+  <div class="build-step" data-step="STEP 2">
+    <div class="bs-title">🔗 Tool 1 runs → take its output → feed to Tool 2</div>
+    <div class="bs-goal">Goal: manually execute a 2-tool chain where Tool 2 depends on Tool 1</div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">sequential_manual.py</span></div>
+      <div class="code-body"><pre><span style="color:var(--cb)">from</span> langchain_openai <span style="color:var(--cb)">import</span> ChatOpenAI
+<span style="color:var(--cb)">from</span> langchain_core.messages <span style="color:var(--cb)">import</span> HumanMessage, ToolMessage
+<span style="color:var(--cb)">from</span> bajaj_tools <span style="color:var(--cb)">import</span> get_loan_status, calculate_prepayment_impact
+
+llm = ChatOpenAI(model=<span style="color:var(--cg)">"gpt-4o-mini"</span>, temperature=<span style="color:var(--co)">0</span>)
+
+<span style="color:var(--cc)"># Give LLM BOTH tools — it will decide which to call first</span>
+tools = [get_loan_status, calculate_prepayment_impact]
+llm_with_tools = llm.bind_tools(tools)
+
+<span style="color:var(--cc)"># Helper: map tool name → tool function (for easy lookup)</span>
+tool_map = {<span style="color:var(--cg)">"get_loan_status"</span>: get_loan_status, 
+            <span style="color:var(--cg)">"calculate_prepayment_impact"</span>: calculate_prepayment_impact}
+
+user_question = <span style="color:var(--cg)">"For loan BFL2024001, if I prepay ₹50,000, what's the penalty and savings?"</span>
+messages = [HumanMessage(content=user_question)]
+
+<span style="color:var(--cc)"># ─── TURN 1: LLM decides to call get_loan_status first ───</span>
+response = llm_with_tools.invoke(messages)
+<span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">"Turn 1 — LLM wants to call:"</span>, [tc[<span style="color:var(--cg)">"name"</span>] <span style="color:var(--cb)">for</span> tc <span style="color:var(--cb)">in</span> response.tool_calls])
+messages.append(response)
+
+<span style="color:var(--cc)"># Execute whatever LLM asked for</span>
+<span style="color:var(--cb)">for</span> tc <span style="color:var(--cb)">in</span> response.tool_calls:
+    result = tool_map[tc[<span style="color:var(--cg)">"name"</span>]].invoke(tc[<span style="color:var(--cg)">"args"</span>])
+    messages.append(ToolMessage(content=str(result), tool_call_id=tc[<span style="color:var(--cg)">"id"</span>]))
+
+<span style="color:var(--cc)"># ─── TURN 2: LLM sees loan data, now calls calculate_prepayment_impact ───</span>
+response = llm_with_tools.invoke(messages)
+<span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">"Turn 2 — LLM wants to call:"</span>, [tc[<span style="color:var(--cg)">"name"</span>] <span style="color:var(--cb)">for</span> tc <span style="color:var(--cb)">in</span> response.tool_calls])
+messages.append(response)
+
+<span style="color:var(--cb)">for</span> tc <span style="color:var(--cb)">in</span> response.tool_calls:
+    result = tool_map[tc[<span style="color:var(--cg)">"name"</span>]].invoke(tc[<span style="color:var(--cg)">"args"</span>])
+    messages.append(ToolMessage(content=str(result), tool_call_id=tc[<span style="color:var(--cg)">"id"</span>]))
+
+<span style="color:var(--cc)"># ─── TURN 3: LLM has all data, writes final reply ───</span>
+final = llm_with_tools.invoke(messages)
+<span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">"\nFinal answer:"</span>)
+<span style="color:var(--cb)">print</span>(final.content)</pre></div>
+    </div>
+
+    <div class="test-out">Turn 1 — LLM wants to call: ['get_loan_status']
+Turn 2 — LLM wants to call: ['calculate_prepayment_impact']
+
+Final answer:
+<span style="color:var(--cg)">For loan BFL2024001, your ₹50,000 prepayment would incur a penalty of ₹1,000 (2%). However, you'd save ₹12,500 in future interest payments, giving you a net benefit of ₹11,500. Prepayment is beneficial.</span></div>
+  </div>
+
+  <div class="think-box">
+    <div class="think-label">The Loop Pattern You Just Wrote</div>
+    <p>Notice the shape — <strong>call LLM, execute tools, append results, call LLM again</strong>. Repeat until LLM stops asking for tools. This loop is the heart of function calling:</p>
+    <div class="code-block" style="margin-top:10px">
+      <div class="code-body"><pre><span style="color:var(--cc)"># The pattern in pseudocode:</span>
+<span style="color:var(--cb)">while</span> LLM has tool_calls:
+    execute each tool_call
+    append ToolMessage results to messages
+    call LLM again <span style="color:var(--cc)"># ← LLM sees results, decides next step</span>
+
+<span style="color:var(--cc)"># When LLM stops asking for tools → final text answer</span></pre></div>
+    </div>
+  </div>
+
+  <div class="win-box">
+    <div class="win-label">Why This is "Sequential Reasoning"</div>
+    <p>The LLM figured out the order by itself — it knew <code>calculate_prepayment_impact</code> needed <code>outstanding</code> and <code>interest_rate</code>, which come from <code>get_loan_status</code>. So it called them in the right order. You just looped and executed.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(5)"><small>←</small>Build Tool #1</button>
+    <button class="ch-btn primary" onclick="goTo(7)"><small>Next →</small>Parallel Calls</button>
+  </div>
+</div>
+
+<!-- ══════════════════ CH 7 — PARALLEL ══════════════════ -->
+<div class="chapter" id="ch7">
+  <div class="ch-eyebrow">Session 08 — Chapter 8 of 10</div>
+  <h1 class="ch-title">Three tools,<br><span class="hl-amber">at the same time.</span></h1>
+  <p class="ch-sub">When tools are independent — none needs another's output — don't waste time calling them sequentially. Run them in parallel. Customer sees the result 3x faster.</p>
+
+  <h2>Sequential vs Parallel — The Difference</h2>
+
+  <div class="compare">
+    <div class="cmp bad">
+      <div class="cmp-label">❌ Sequential (slow)</div>
+      <p>Tool 1 (2s) → Tool 2 (2s) → Tool 3 (2s)</p>
+      <p style="margin-top:10px;font-family:'Syne',sans-serif;font-size:20px;color:var(--red)">Total: 6 seconds</p>
+    </div>
+    <div class="cmp good">
+      <div class="cmp-label">✅ Parallel (fast)</div>
+      <p>Tool 1 (2s) ║ Tool 2 (2s) ║ Tool 3 (2s)</p>
+      <p style="margin-top:10px;font-family:'Syne',sans-serif;font-size:20px;color:var(--green)">Total: ~2 seconds</p>
+    </div>
+  </div>
+
+  <h2>When to Use Parallel — The Rule</h2>
+  <div class="think-box">
+    <div class="think-label">The Independence Test</div>
+    <p>Before running tools in parallel, ask: <strong>does any tool need output from another tool?</strong></p>
+    <ul>
+      <li><strong>Yes</strong> → sequential (prepayment needs loan data first)</li>
+      <li><strong>No</strong> → parallel (weather, hotels, flights for a trip are independent)</li>
+    </ul>
+    <p style="margin-bottom:0;">Today's example: a customer asks for loan status + next EMI due date + recent refund requests. Three independent queries — perfect for parallel execution.</p>
+  </div>
+
+  <h2>The Fan-Out / Fan-In Pattern</h2>
+  <div class="hero-viz" style="padding:30px">
+    <div class="hero-flow">
+      <div class="flow-node">
+        <span class="fn-icon">👤</span>
+        <div class="fn-label">Query</div>
+        <div class="fn-title">3 questions</div>
+      </div>
+      <span class="flow-arrow">⇉</span>
+      <div class="flow-node">
+        <span class="fn-icon">🔧</span>
+        <div class="fn-label">Fan Out</div>
+        <div class="fn-title">3 tools fire</div>
+      </div>
+      <span class="flow-arrow">⇇</span>
+      <div class="flow-node">
+        <span class="fn-icon">📥</span>
+        <div class="fn-label">Fan In</div>
+        <div class="fn-title">Collect all</div>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node">
+        <span class="fn-icon">💬</span>
+        <div class="fn-label">Synthesize</div>
+        <div class="fn-title">1 answer</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Build It — Parallel Bajaj Queries</h2>
+
+  <div class="build-step" data-step="STEP 1">
+    <div class="bs-title">🔧 Add two more data retrieval tools</div>
+    <div class="bs-goal">Goal: independent tools that can run in parallel</div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">bajaj_tools.py (add these)</span></div>
+      <div class="code-body"><pre><span style="color:var(--co)">@tool</span>
+<span style="color:var(--cb)">def</span> <span style="color:var(--cb)">get_emi_schedule</span>(loan_id: str, months_ahead: int = <span style="color:var(--co)">3</span>) -> dict:
+    <span style="color:var(--cg)">"""Returns upcoming EMI schedule for a loan.
+    
+    Use when customer asks about future EMI dates or upcoming payments.
+    """</span>
+    <span style="color:var(--cb)">if</span> loan_id <span style="color:var(--cb)">not in</span> db[<span style="color:var(--cg)">"loans"</span>]:
+        <span style="color:var(--cb)">return</span> {<span style="color:var(--cg)">"error"</span>: <span style="color:var(--cg)">"Loan not found"</span>}
+    loan = db[<span style="color:var(--cg)">"loans"</span>][loan_id]
+    <span style="color:var(--cb)">return</span> {
+        <span style="color:var(--cg)">"loan_id"</span>: loan_id,
+        <span style="color:var(--cg)">"emi_amount"</span>: loan[<span style="color:var(--cg)">"emi"</span>],
+        <span style="color:var(--cg)">"upcoming_dates"</span>: [<span style="color:var(--cg)">"2026-05-05"</span>, <span style="color:var(--cg)">"2026-06-05"</span>, <span style="color:var(--cg)">"2026-07-05"</span>][:months_ahead]
+    }
+
+<span style="color:var(--co)">@tool</span>
+<span style="color:var(--cb)">def</span> <span style="color:var(--cb)">check_interest_rate</span>(loan_type: str) -> dict:
+    <span style="color:var(--cg)">"""Checks current Bajaj Finance interest rate for a loan type.
+    
+    Use when customer asks about current rates for a type of loan.
+    """</span>
+    rates = {
+        <span style="color:var(--cg)">"personal loan"</span>: <span style="color:var(--co)">11.5</span>,
+        <span style="color:var(--cg)">"home loan"</span>: <span style="color:var(--co)">8.75</span>,
+        <span style="color:var(--cg)">"business loan"</span>: <span style="color:var(--co)">14.0</span>,
+    }
+    <span style="color:var(--cb)">return</span> {<span style="color:var(--cg)">"loan_type"</span>: loan_type, <span style="color:var(--cg)">"rate_pct"</span>: rates.get(loan_type.lower(), <span style="color:var(--co)">12.0</span>)}</pre></div>
+    </div>
+  </div>
+
+  <div class="build-step" data-step="STEP 2">
+    <div class="bs-title">⚡ One LLM call → multiple tool calls → execute all together</div>
+    <div class="bs-goal">Goal: LLM returns 3 tool calls in one response, you execute all of them</div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">parallel_manual.py</span></div>
+      <div class="code-body"><pre><span style="color:var(--cb)">from</span> langchain_openai <span style="color:var(--cb)">import</span> ChatOpenAI
+<span style="color:var(--cb)">from</span> langchain_core.messages <span style="color:var(--cb)">import</span> HumanMessage, ToolMessage
+<span style="color:var(--cb)">from</span> bajaj_tools <span style="color:var(--cb)">import</span> get_loan_status, get_emi_schedule, check_interest_rate
+
+llm = ChatOpenAI(model=<span style="color:var(--cg)">"gpt-4o-mini"</span>, temperature=<span style="color:var(--co)">0</span>)
+
+tools = [get_loan_status, get_emi_schedule, check_interest_rate]
+llm_with_tools = llm.bind_tools(tools)
+
+tool_map = {
+    <span style="color:var(--cg)">"get_loan_status"</span>: get_loan_status,
+    <span style="color:var(--cg)">"get_emi_schedule"</span>: get_emi_schedule,
+    <span style="color:var(--cg)">"check_interest_rate"</span>: check_interest_rate,
+}
+
+<span style="color:var(--cc)"># Query that needs THREE INDEPENDENT pieces of info</span>
+user_question = <span style="color:var(--cg)">"For loan BFL2024001, show me: current status, next 3 EMI dates, "</span> \
+                <span style="color:var(--cg)">"and current personal loan rate at Bajaj."</span>
+messages = [HumanMessage(content=user_question)]
+
+<span style="color:var(--cc)"># ─── LLM returns MULTIPLE tool_calls in ONE response ───</span>
+response = llm_with_tools.invoke(messages)
+<span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"LLM asked for {len(response.tool_calls)} tools:"</span>)
+<span style="color:var(--cb)">for</span> tc <span style="color:var(--cb)">in</span> response.tool_calls:
+    <span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"  → {tc['name']}({tc['args']})"</span>)
+
+messages.append(response)
+
+<span style="color:var(--cc)"># ─── Execute ALL of them (loop — fast since all are independent) ───</span>
+<span style="color:var(--cb)">for</span> tc <span style="color:var(--cb)">in</span> response.tool_calls:
+    result = tool_map[tc[<span style="color:var(--cg)">"name"</span>]].invoke(tc[<span style="color:var(--cg)">"args"</span>])
+    messages.append(ToolMessage(content=str(result), tool_call_id=tc[<span style="color:var(--cg)">"id"</span>]))
+
+<span style="color:var(--cc)"># ─── LLM synthesizes final answer from all 3 results ───</span>
+final = llm_with_tools.invoke(messages)
+<span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">"\nFinal answer:"</span>)
+<span style="color:var(--cb)">print</span>(final.content)</pre></div>
+    </div>
+
+    <div class="test-out">LLM asked for 3 tools:
+  → get_loan_status({'loan_id': 'BFL2024001'})
+  → get_emi_schedule({'loan_id': 'BFL2024001', 'months_ahead': 3})
+  → check_interest_rate({'loan_type': 'personal loan'})
+
+Final answer:
+<span style="color:var(--cg)">Here's the info for loan BFL2024001:
+• Current EMI: ₹8,450/month, 22 EMIs remaining
+• Next 3 EMI dates: 5 May, 5 June, 5 July 2026
+• Current personal loan rate: 11.5% p.a.</span></div>
+  </div>
+
+  <div class="think-box">
+    <div class="think-label">Sequential vs Parallel — Same Loop, Different Behavior</div>
+    <p>Look closely — the code in Ch.7 (Sequential) and Ch.8 (Parallel) is <strong>the same loop pattern</strong>. What changes?</p>
+    <ul>
+      <li><strong>Sequential (Ch.7):</strong> LLM returns 1 tool_call per turn → you loop multiple turns</li>
+      <li><strong>Parallel (Ch.8):</strong> LLM returns 3 tool_calls in 1 turn → you execute all in one loop</li>
+    </ul>
+    <p style="margin-bottom:0;">The LLM decides the shape based on whether tools depend on each other. You just execute what it asks.</p>
+  </div>
+
+  <div class="win-box">
+    <div class="win-label">Speed Improvement</div>
+    <p>Sequential would need 3 separate LLM round-trips: ~3 seconds. Parallel = 1 LLM round-trip + 3 fast function calls: ~1 second. For a customer-facing chatbot, this is the difference between "snappy" and "slow".</p>
+  </div>
+
+  <div class="note-box">
+    <div class="note-label">Why gpt-4o-mini is Good at This</div>
+    <p>Modern tool-calling models like <code>gpt-4o-mini</code> are trained to detect when multiple tools are independent and return them together in one response. Older models returned one tool call at a time, forcing sequential execution.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(6)"><small>←</small>Sequential</button>
+    <button class="ch-btn primary" onclick="goTo(8)"><small>Next →</small>Error Handling</button>
+  </div>
+</div>
+
+<!-- ══════════════════ CH 8 — ERRORS ══════════════════ -->
+<div class="chapter" id="ch8">
+  <div class="ch-eyebrow">Session 08 — Chapter 9 of 10</div>
+  <h1 class="ch-title">When tools <span class="hl-red">fail.</span></h1>
+  <p class="ch-sub">Tools fail in production — APIs timeout, databases go down, inputs are malformed. A production bot handles failures gracefully. Let's see the 5 strategies.</p>
+
+  <h2>What Could Go Wrong?</h2>
+  <div class="tool-types">
+    <div class="tool-type" style="border-top-color:var(--red)">
+      <div class="tt-icon">⏱️</div>
+      <div class="tt-label" style="color:var(--red)">Failure 1</div>
+      <h3>Timeout</h3>
+      <p>Database is slow, API hangs. Your whole bot freezes waiting.</p>
+    </div>
+    <div class="tool-type" style="border-top-color:var(--amber)">
+      <div class="tt-icon">❓</div>
+      <div class="tt-label" style="color:var(--amber)">Failure 2</div>
+      <h3>Invalid Input</h3>
+      <p>Customer gives a loan ID that doesn't exist, or wrong format.</p>
+    </div>
+    <div class="tool-type" style="border-top-color:var(--blue)">
+      <div class="tt-icon">💥</div>
+      <div class="tt-label" style="color:var(--blue)">Failure 3</div>
+      <h3>Bad Data</h3>
+      <p>API returns malformed JSON. Missing required fields.</p>
+    </div>
+  </div>
+
+  <h2>The 5 Strategies</h2>
+
+  <h3>Strategy 1 — Isolate Failures</h3>
+  <p>If one tool fails in a multi-tool query, don't crash everything. Return what worked.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">isolate_failures.py</span></div>
+    <div class="code-body"><pre><span style="color:var(--co)">@tool</span>
+<span style="color:var(--cb)">def</span> <span style="color:var(--cb)">get_loan_status</span>(loan_id: str) -> dict:
+    <span style="color:var(--cg)">"""Fetches loan status. Returns structured error if loan not found."""</span>
+    <span style="color:var(--cb)">try</span>:
+        <span style="color:var(--cb)">if</span> loan_id <span style="color:var(--cb)">not in</span> db[<span style="color:var(--cg)">"loans"</span>]:
+            <span style="color:var(--cb)">return</span> {<span style="color:var(--cg)">"error"</span>: <span style="color:var(--cg)">f"Loan {loan_id} not found in our system"</span>}
+        <span style="color:var(--cb)">return</span> db[<span style="color:var(--cg)">"loans"</span>][loan_id]
+    <span style="color:var(--cb)">except</span> Exception <span style="color:var(--cb)">as</span> e:
+        <span style="color:var(--cc)"># Don't raise — return structured error so LLM can explain to user</span>
+        <span style="color:var(--cb)">return</span> {<span style="color:var(--cg)">"error"</span>: <span style="color:var(--cg)">f"Database error: {str(e)}"</span>}</pre></div>
+  </div>
+
+  <h3>Strategy 2 — Use Timeouts</h3>
+  <p>Set a max wait time. If tool doesn't respond, fail fast.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">timeouts.py</span></div>
+    <div class="code-body"><pre><span style="color:var(--cb)">import</span> requests
+
+<span style="color:var(--co)">@tool</span>
+<span style="color:var(--cb)">def</span> <span style="color:var(--cb)">check_credit_score</span>(loan_id: str) -> dict:
+    <span style="color:var(--cg)">"""Fetches CIBIL credit score from external API."""</span>
+    <span style="color:var(--cb)">try</span>:
+        response = requests.get(
+            <span style="color:var(--cg)">f"https://credit-api.bajaj.com/score/{loan_id}"</span>,
+            timeout=<span style="color:var(--co)">5</span>  <span style="color:var(--cc)"># ← fail after 5 seconds, don't hang forever</span>
+        )
+        <span style="color:var(--cb)">return</span> response.json()
+    <span style="color:var(--cb)">except</span> requests.Timeout:
+        <span style="color:var(--cb)">return</span> {<span style="color:var(--cg)">"error"</span>: <span style="color:var(--cg)">"Credit service is slow — please try again"</span>}</pre></div>
+  </div>
+
+  <h3>Strategy 3 — Provide Fallbacks</h3>
+  <p>When live data unavailable, use cached or default data with a disclaimer.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">fallbacks.py</span></div>
+    <div class="code-body"><pre><span style="color:var(--co)">@tool</span>
+<span style="color:var(--cb)">def</span> <span style="color:var(--cb)">check_interest_rate</span>(loan_type: str) -> dict:
+    <span style="color:var(--cg)">"""Gets current interest rate. Uses cached rate if live API fails."""</span>
+    <span style="color:var(--cb)">try</span>:
+        rate = fetch_from_live_api(loan_type)  <span style="color:var(--cc)"># might fail</span>
+        <span style="color:var(--cb)">return</span> {<span style="color:var(--cg)">"rate"</span>: rate, <span style="color:var(--cg)">"source"</span>: <span style="color:var(--cg)">"live"</span>}
+    <span style="color:var(--cb)">except</span>:
+        <span style="color:var(--cc)"># Fall back to yesterday's cached rate</span>
+        cached = {<span style="color:var(--cg)">"personal loan"</span>: <span style="color:var(--co)">11.5</span>, <span style="color:var(--cg)">"home loan"</span>: <span style="color:var(--co)">8.75</span>}
+        <span style="color:var(--cb)">return</span> {
+            <span style="color:var(--cg)">"rate"</span>: cached.get(loan_type, <span style="color:var(--co)">12.0</span>),
+            <span style="color:var(--cg)">"source"</span>: <span style="color:var(--cg)">"cached"</span>,
+            <span style="color:var(--cg)">"note"</span>: <span style="color:var(--cg)">"Live API unavailable — using yesterday's rate"</span>
+        }</pre></div>
+  </div>
+
+  <h3>Strategy 4 — Validate Schema with Pydantic</h3>
+  <p>Don't trust API responses blindly. Validate structure before using.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">pydantic_validation.py</span></div>
+    <div class="code-body"><pre><span style="color:var(--cb)">from</span> pydantic <span style="color:var(--cb)">import</span> BaseModel, ValidationError
+
+<span style="color:var(--cb)">class</span> LoanData(BaseModel):
+    customer_name: str
+    emi: float
+    remaining_months: int
+    outstanding: float
+
+<span style="color:var(--co)">@tool</span>
+<span style="color:var(--cb)">def</span> <span style="color:var(--cb)">get_loan_status</span>(loan_id: str) -> dict:
+    <span style="color:var(--cg)">"""Fetches loan — validates response structure."""</span>
+    raw_data = db[<span style="color:var(--cg)">"loans"</span>].get(loan_id, {})
+    <span style="color:var(--cb)">try</span>:
+        validated = LoanData(**raw_data)  <span style="color:var(--cc)"># ← enforces schema</span>
+        <span style="color:var(--cb)">return</span> validated.dict()
+    <span style="color:var(--cb)">except</span> ValidationError <span style="color:var(--cb)">as</span> e:
+        <span style="color:var(--cb)">return</span> {<span style="color:var(--cg)">"error"</span>: <span style="color:var(--cg)">f"Loan data is corrupted: {e}"</span>}</pre></div>
+  </div>
+
+  <h3>Strategy 5 — Surface Errors to LLM (Structured)</h3>
+  <p>Don't hide errors — let the LLM explain them to the user helpfully.</p>
+
+  <div class="chat-demo">
+    <div class="chat-top"><div style="width:8px;height:8px;border-radius:50%;background:#ff5f57"></div><div style="width:8px;height:8px;border-radius:50%;background:#febc2e"></div><div style="width:8px;height:8px;border-radius:50%;background:#28c840"></div><span style="margin-left:8px;">Graceful error handling in action</span></div>
+    <div class="chat-inner">
+      <div class="cmsg user"><div class="cavatar">U</div><div class="cbubble">What's the status of loan BFL9999?</div></div>
+      <div class="cmsg tool"><div class="cavatar">🔧</div><div class="cbubble">→ get_loan_status(loan_id="BFL9999")<br>← { error: "Loan BFL9999 not found in our system" }</div></div>
+      <div class="cmsg bot"><div class="cavatar">AI</div><div class="cbubble">I couldn't find loan BFL9999 in our system. Could you please double-check the loan number? Bajaj Finance loan IDs start with "BFL" followed by a specific number.</div></div>
+    </div>
+  </div>
+
+  <div class="win-box">
+    <div class="win-label">The Pattern</div>
+    <p>Return structured errors from tools → LLM reads them → LLM explains to the user in a friendly way. No crashes. No cryptic Python tracebacks reaching customers.</p>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(7)"><small>←</small>Parallel</button>
+    <button class="ch-btn primary" onclick="goTo(9)"><small>Next →</small>Full Bot</button>
+  </div>
+</div>
+
+<!-- ══════════════════ CH 9 — FULL BOT ══════════════════ -->
+<div class="chapter" id="ch9">
+  <div class="ch-eyebrow">Session 08 — Chapter 10 of 10</div>
+  <h1 class="ch-title">The complete<br><span class="hl-green">Bajaj bot.</span></h1>
+  <p class="ch-sub">Session 7 memory + Session 8 tools = the full helpdesk assistant. Let's wire it all together and watch it handle a real multi-turn conversation with real data.</p>
+
+  <h2>What We Have Now</h2>
+  <div class="compare">
+    <div class="cmp" style="background:var(--blue-light);border-color:var(--blue-border)">
+      <div class="cmp-label" style="color:var(--blue)">📚 FROM S7</div>
+      <ul style="margin:0;padding-left:18px">
+        <li>Chat Completion API</li>
+        <li>System prompt for personality</li>
+        <li>Buffer memory across turns</li>
+        <li>Session isolation per customer</li>
+      </ul>
+    </div>
+    <div class="cmp" style="background:var(--green-light);border-color:var(--green-border)">
+      <div class="cmp-label" style="color:var(--green)">🔧 FROM S8</div>
+      <ul style="margin:0;padding-left:18px">
+        <li>4 real tools with <code>@tool</code></li>
+        <li>Sequential chaining</li>
+        <li>Parallel execution</li>
+        <li>Error handling</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Combining Everything</h2>
+
+  <div class="build-step" data-step="FINAL BUILD">
+    <div class="bs-title">🎯 Production Bajaj Finance Helpdesk</div>
+    <div class="bs-goal">Goal: memory + tools + personality + error handling, all in one</div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot dr"></div><div class="code-dot dy"></div><div class="code-dot dg"></div></div><span class="code-filename">bajaj_helpdesk.py</span><span class="code-tag tag-win">PRODUCTION</span></div>
+      <div class="code-body"><pre><span style="color:var(--cb)">from</span> langchain_openai <span style="color:var(--cb)">import</span> ChatOpenAI
+<span style="color:var(--cb)">from</span> langchain_core.messages <span style="color:var(--cb)">import</span> SystemMessage, HumanMessage, ToolMessage
+<span style="color:var(--cb)">from</span> bajaj_tools <span style="color:var(--cb)">import</span> (
+    get_loan_status,
+    calculate_prepayment_impact,
+    get_emi_schedule,
+    check_interest_rate,
+)
+
+<span style="color:var(--cc)"># ─── 1. Setup: LLM + Tools ───</span>
+llm = ChatOpenAI(model=<span style="color:var(--cg)">"gpt-4o-mini"</span>, temperature=<span style="color:var(--co)">0</span>)
+
+tools = [get_loan_status, calculate_prepayment_impact,
+         get_emi_schedule, check_interest_rate]
+llm_with_tools = llm.bind_tools(tools)
+
+tool_map = {t.name: t <span style="color:var(--cb)">for</span> t <span style="color:var(--cb)">in</span> tools}
+
+<span style="color:var(--cc)"># ─── 2. System prompt (personality from S7) ───</span>
+system_prompt = <span style="color:var(--cg)">"""You are a professional Bajaj Finance customer support agent.
+- ALWAYS use tools to fetch real data — NEVER make up numbers
+- If a tool returns an error, explain it helpfully
+- Never mention competitor banks
+- Keep responses under 4 sentences"""</span>
+
+<span style="color:var(--cc)"># ─── 3. Memory: a simple list of messages (same idea as S7) ───</span>
+conversation = [SystemMessage(content=system_prompt)]
+
+<span style="color:var(--cc)"># ─── 4. The chat function — the reusable loop ───</span>
+<span style="color:var(--cb)">def</span> <span style="color:var(--cb)">chat</span>(user_message: str) -> str:
+    <span style="color:var(--cg)">"""Send user message, loop until LLM gives final text answer."""</span>
+    <span style="color:var(--cc)"># Add user message to memory</span>
+    conversation.append(HumanMessage(content=user_message))
+    
+    <span style="color:var(--cc)"># Loop: keep calling LLM until it stops asking for tools</span>
+    <span style="color:var(--cb)">while</span> <span style="color:var(--cm)">True</span>:
+        response = llm_with_tools.invoke(conversation)
+        conversation.append(response)
+        
+        <span style="color:var(--cc)"># If no tool calls, LLM is done — return its text answer</span>
+        <span style="color:var(--cb)">if</span> <span style="color:var(--cb)">not</span> response.tool_calls:
+            <span style="color:var(--cb)">return</span> response.content
+        
+        <span style="color:var(--cc)"># Otherwise, execute each requested tool call</span>
+        <span style="color:var(--cb)">for</span> tc <span style="color:var(--cb)">in</span> response.tool_calls:
+            result = tool_map[tc[<span style="color:var(--cg)">"name"</span>]].invoke(tc[<span style="color:var(--cg)">"args"</span>])
+            conversation.append(ToolMessage(
+                content=str(result),
+                tool_call_id=tc[<span style="color:var(--cg)">"id"</span>]
+            ))
+
+<span style="color:var(--cc)"># ─── 5. USE IT — multi-turn conversation ───</span>
+turns = [
+    <span style="color:var(--cg)">"Hi, my loan is BFL2024001. What's my current EMI?"</span>,
+    <span style="color:var(--cg)">"How many are left?"</span>,                                       <span style="color:var(--cc)"># ← memory</span>
+    <span style="color:var(--cg)">"If I prepay ₹50,000 next month, what's the net benefit?"</span>,  <span style="color:var(--cc)"># ← 2 tools</span>
+    <span style="color:var(--cg)">"What's the current personal loan rate at Bajaj?"</span>,         <span style="color:var(--cc)"># ← another tool</span>
+]
+
+<span style="color:var(--cb)">for</span> i, turn <span style="color:var(--cb)">in</span> enumerate(turns, <span style="color:var(--co)">1</span>):
+    <span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"\n[Turn {i}]"</span>)
+    <span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"Customer: {turn}"</span>)
+    <span style="color:var(--cb)">print</span>(<span style="color:var(--cg)">f"Bot: {chat(turn)}"</span>)</pre></div>
+    </div>
+  </div>
+
+  <div class="think-box">
+    <div class="think-label">Read the chat() Function Carefully</div>
+    <p>This 15-line function is the <strong>core of every tool-using chatbot</strong>. It's literally:</p>
+    <ol style="margin:8px 0 0 20px">
+      <li>Add user message to conversation</li>
+      <li>Ask LLM</li>
+      <li>If LLM wants tools → execute them, add results, loop back to step 2</li>
+      <li>If LLM gives text → return the answer</li>
+    </ol>
+    <p style="margin-top:10px;margin-bottom:0;">Memory works because we append everything to <code>conversation</code> — same list passed in every <code>invoke()</code>. Same idea as S7, just with tools added.</p>
+  </div>
+
+  <h2>The Final Conversation — Live</h2>
+
+  <div class="chat-demo">
+    <div class="chat-top"><div style="width:8px;height:8px;border-radius:50%;background:#ff5f57"></div><div style="width:8px;height:8px;border-radius:50%;background:#febc2e"></div><div style="width:8px;height:8px;border-radius:50%;background:#28c840"></div><span style="margin-left:8px;">🏦 Bajaj Finance Helpdesk — Memory + Tools Combined</span></div>
+    <div class="chat-inner">
+      <div class="clabel">Turn 1</div>
+      <div class="cmsg user"><div class="cavatar">U</div><div class="cbubble">Hi, my loan is BFL2024001. What's my current EMI?</div></div>
+      <div class="cmsg tool"><div class="cavatar">🔧</div><div class="cbubble">[called] get_loan_status(loan_id="BFL2024001")</div></div>
+      <div class="cmsg bot"><div class="cavatar">AI</div><div class="creal">Hello Rahul! Your EMI for loan BFL2024001 is ₹8,450 per month.</div></div>
+      <div class="clabel">Turn 2 — uses memory (knows loan_id from Turn 1)</div>
+      <div class="cmsg user"><div class="cavatar">U</div><div class="cbubble">How many are left?</div></div>
+      <div class="cmsg tool"><div class="cavatar">🔧</div><div class="cbubble">[called] get_loan_status(loan_id="BFL2024001")</div></div>
+      <div class="cmsg bot"><div class="cavatar">AI</div><div class="creal">You have 22 EMIs remaining. Loan will close by Feb 2026.</div></div>
+      <div class="clabel">Turn 3 — uses 2 tools sequentially</div>
+      <div class="cmsg user"><div class="cavatar">U</div><div class="cbubble">If I prepay ₹50,000 next month, what's the net benefit?</div></div>
+      <div class="cmsg tool"><div class="cavatar">🔧</div><div class="cbubble">[called] get_loan_status → then → calculate_prepayment_impact</div></div>
+      <div class="cmsg bot"><div class="cavatar">AI</div><div class="creal">Penalty: ₹1,000 (2%). Interest saved: ₹12,500. Net benefit: ₹11,500. Prepayment is beneficial.</div></div>
+      <div class="clabel">Turn 4 — different tool</div>
+      <div class="cmsg user"><div class="cavatar">U</div><div class="cbubble">What's the current personal loan rate at Bajaj?</div></div>
+      <div class="cmsg tool"><div class="cavatar">🔧</div><div class="cbubble">[called] check_interest_rate(loan_type="personal loan")</div></div>
+      <div class="cmsg bot"><div class="cavatar">AI</div><div class="creal">Current Bajaj Finance personal loan rate: 11.5% p.a.</div></div>
+    </div>
+  </div>
+
+  <div class="win-box">
+    <div class="win-label">🎉 You Shipped a Production Bot</div>
+    <p>This is genuinely what many enterprise chatbots look like under the hood. Memory + tools + structured error handling. You just built the foundation of a real fintech assistant.</p>
+  </div>
+
+  <div class="teaser">
+    <div class="t-label">Coming Up — Session 9</div>
+    <h3>Agents — automate the loop you just wrote</h3>
+    <p>Look at your <code>chat()</code> function from Ch.10 — you manually handle <em>every step</em>: invoke LLM, check tool_calls, execute each one, append ToolMessage, loop back. It works but it's repetitive boilerplate for every project.</p>
+    <div class="cliff">What if you could replace those 15 lines with one line: <code>agent.invoke("What's my EMI?")</code> — and LangChain runs the whole loop for you? That's <strong>AgentExecutor</strong>. Now that you've built the loop by hand, you'll truly appreciate the magic. That's Session 9: Agents.</div>
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(8)"><small>←</small>Errors</button>
+    <button class="ch-btn primary" onclick="goTo(10)"><small>Next →</small>Quiz</button>
+  </div>
+</div>
+
+<!-- ══════════════════ CH 10 — QUIZ ══════════════════ -->
+<div class="chapter" id="ch10">
+  <div class="ch-eyebrow">Session 08 — Quiz</div>
+  <h1 class="ch-title">Test your<br><span class="hl-green">mastery.</span></h1>
+  <p class="ch-sub">10 questions based on the Bajaj Finance journey. Click an answer to see the explanation.</p>
+
+  <div class="quiz-section">
+
+    <div class="quiz-q">Q1. Your S7 bot confidently tells a customer their EMI is ₹8,450 — but there's no database connection. What is this called?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">Context overflow</button>
+      <button class="q-opt" onclick="ans(this,true)">Hallucination — LLM predicts plausible-sounding numbers without real data</button>
+      <button class="q-opt" onclick="ans(this,false)">Token truncation</button>
+      <button class="q-opt" onclick="ans(this,false)">Model degradation</button>
+    </div>
+    <div class="q-fb">When LLMs don't have real data, they predict what seems likely based on patterns in training. The output is confident but factually wrong — the core problem that tools solve.</div>
+
+    <div class="quiz-q">Q2. Which tool type would calculate_prepayment_impact fall under?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">Data Retrieval — it returns information</button>
+      <button class="q-opt" onclick="ans(this,true)">Computation — it performs math on given inputs</button>
+      <button class="q-opt" onclick="ans(this,false)">Action — it changes something in the real world</button>
+      <button class="q-opt" onclick="ans(this,false)">Validation — it checks for errors</button>
+    </div>
+    <div class="q-fb">Computation tools take inputs, run reliable math (not LLM prediction), and return results. They solve the "LLMs can't do math reliably" problem.</div>
+
+    <div class="quiz-q">Q3. In the Tool Card, which field does the LLM use MOST to decide whether to call a specific tool?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">name</button>
+      <button class="q-opt" onclick="ans(this,true)">description — it explains what the tool does and when to use it</button>
+      <button class="q-opt" onclick="ans(this,false)">parameters schema</button>
+      <button class="q-opt" onclick="ans(this,false)">return type</button>
+    </div>
+    <div class="q-fb">The description is the primary signal for tool selection. A bad description = LLM won't pick the tool even if it's perfect for the query. The name and parameters are secondary.</div>
+
+    <div class="quiz-q">Q4. In LangChain, how do you turn a Python function into a tool?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">Convert it to JSON manually</button>
+      <button class="q-opt" onclick="ans(this,true)">Add the @tool decorator — LangChain reads the docstring + type hints</button>
+      <button class="q-opt" onclick="ans(this,false)">Register it in a tools.yaml config file</button>
+      <button class="q-opt" onclick="ans(this,false)">Wrap it in a ToolClass subclass</button>
+    </div>
+    <div class="q-fb">@tool is LangChain's magic — it reads your function name (→ tool name), docstring (→ description), and type-hinted parameters (→ schema). Zero boilerplate.</div>
+
+    <div class="quiz-q">Q5. What does the LLM actually do when it "calls a function"?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">Executes the Python code directly</button>
+      <button class="q-opt" onclick="ans(this,false)">Opens an HTTP connection to the API</button>
+      <button class="q-opt" onclick="ans(this,true)">Generates a structured JSON saying "call this tool with these args" — your code executes it</button>
+      <button class="q-opt" onclick="ans(this,false)">Translates the query to SQL</button>
+    </div>
+    <div class="q-fb">LLMs can't execute code. They generate a structured request (the tool_calls you saw in Ch.6). Your backend code parses that request and runs the actual function. This security separation is why function calling is safe.</div>
+
+    <div class="quiz-q">Q6. Customer asks: "For loan BFL2024001, if I prepay ₹50,000, what's the benefit?" Your bot needs get_loan_status AND calculate_prepayment_impact. How should they execute?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">Parallel — fire both at once for speed</button>
+      <button class="q-opt" onclick="ans(this,true)">Sequential — calculation needs loan data first (dependency)</button>
+      <button class="q-opt" onclick="ans(this,false)">Skip the first tool, guess the numbers</button>
+      <button class="q-opt" onclick="ans(this,false)">Ask the customer for more info</button>
+    </div>
+    <div class="q-fb">calculate_prepayment_impact needs outstanding, interest_rate, charge_pct — which come from get_loan_status. Sequential is required when there's a dependency. The LLM detects this and calls them one after another.</div>
+
+    <div class="quiz-q">Q7. When should you use parallel tool calling?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">Always — it's faster</button>
+      <button class="q-opt" onclick="ans(this,true)">Only when tools are independent — none needs another's output</button>
+      <button class="q-opt" onclick="ans(this,false)">Only for the first tool</button>
+      <button class="q-opt" onclick="ans(this,false)">Only with Action tools</button>
+    </div>
+    <div class="q-fb">The test is independence. Weather + hotels + flights for a trip? Independent → parallel. Loan status + prepayment calc? Dependent → sequential.</div>
+
+    <div class="quiz-q">Q8. A customer asks about loan BFL9999 but it doesn't exist in your database. What's the best way to handle this?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">Throw an unhandled exception — let it crash</button>
+      <button class="q-opt" onclick="ans(this,false)">Return None — let the LLM figure it out</button>
+      <button class="q-opt" onclick="ans(this,true)">Return structured error: {"error": "Loan not found"} — LLM explains it to user</button>
+      <button class="q-opt" onclick="ans(this,false)">Hide the error, return fake data</button>
+    </div>
+    <div class="q-fb">Structured errors let the LLM craft helpful user-facing messages like "I couldn't find that loan — can you double-check the number?". Hiding errors misleads users. Crashing is worse.</div>
+
+    <div class="quiz-q">Q9. In your manual chat() function (Ch.10), why do you use a <code>while</code> loop instead of calling the LLM just once?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">To save API tokens</button>
+      <button class="q-opt" onclick="ans(this,true)">LLM may need multiple tool-call turns before giving a final text answer (e.g., sequential chaining)</button>
+      <button class="q-opt" onclick="ans(this,false)">LangChain requires loops for all function calls</button>
+      <button class="q-opt" onclick="ans(this,false)">To handle memory across conversations</button>
+    </div>
+    <div class="q-fb">For a single-tool query, 1 iteration is enough. But for sequential chaining (prepayment needs loan data first), the LLM returns tool calls, you execute them, then call LLM again → it sees new data → requests the next tool. The loop ends only when the LLM gives a final text answer (no more tool_calls).</div>
+
+    <div class="quiz-q">Q10. You set temperature=0 on your Bajaj Finance bot. Why?</div>
+    <div class="q-opts">
+      <button class="q-opt" onclick="ans(this,false)">To make responses faster</button>
+      <button class="q-opt" onclick="ans(this,false)">To save tokens</button>
+      <button class="q-opt" onclick="ans(this,true)">Deterministic outputs — same input → same tool call. Critical for financial accuracy.</button>
+      <button class="q-opt" onclick="ans(this,false)">To make the bot more creative</button>
+    </div>
+    <div class="q-fb">For finance/health/legal bots, you want predictable, consistent tool usage — never creative surprises. temperature=0 means the LLM picks the most likely tool every time. For creative writing bots, higher temperature is fine.</div>
+
+  </div>
+
+  <div class="ch-nav">
+    <button class="ch-btn" onclick="goTo(9)"><small>←</small>Full Bot</button>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+let cur = 0;
+const chs = document.querySelectorAll('.chapter');
+const navs = document.querySelectorAll('.nav-ch');
+const pf = document.getElementById('pf');
+
+function goTo(n) {
+  chs[cur].classList.remove('active');
+  navs[cur].classList.remove('active');
+  cur = n;
+  chs[cur].classList.add('active');
+  navs[cur].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+  pf.style.width = (n / (chs.length - 1) * 100) + '%';
+}
+
+function ans(btn, correct) {
+  const opts = btn.parentElement.querySelectorAll('.q-opt');
+  opts.forEach(o => o.disabled = true);
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  const fb = btn.parentElement.nextElementSibling;
+  fb.classList.add('show', correct ? 'ok' : 'no');
+  fb.textContent = (correct ? '✅ ' : '❌ ') + fb.textContent;
+}
+
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  pf.style.width = Math.max(parseFloat(pf.style.width)||0, h.scrollTop/(h.scrollHeight-h.clientHeight)*100) + '%';
+});
+</script>
+</body>
+</html>
